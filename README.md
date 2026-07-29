@@ -19,9 +19,11 @@ A web-based network monitoring platform built with ASP.NET Core and React. The M
 - Responsive Overview, Devices, and Device Detail screens
 - Realtime monitoring updates via SignalR with REST fallback
 - Bounded IPv4 CIDR discovery with ICMP ping and reverse DNS
+- Read-only SNMP v2c explorer for system information, interfaces, and custom GET/WALK queries
 - Latency history charts and recent check results
 
 Monitoring status counters are kept in process memory for the MVP and reset when the API restarts.
+SNMP community credentials are request-only and are not persisted or returned by the API.
 
 ## Local Development
 
@@ -46,6 +48,5 @@ Open `http://localhost:5173`.
 ## Planned Features
 
 - Incident tracking
-- SNMP monitoring
 - Interface and bandwidth monitoring
 - Network topology

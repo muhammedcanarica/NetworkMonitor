@@ -69,3 +69,39 @@ export interface IpScanResponse {
   durationMs: number
   results: IpScanHost[]
 }
+
+export interface SnmpConnectionRequest {
+  ipAddress: string
+  community: string
+  timeoutMilliseconds: number
+}
+
+export interface SnmpValue {
+  oid: string
+  value: string | null
+  type: string
+}
+
+export interface SnmpWalkResponse {
+  rootOid: string
+  count: number
+  results: SnmpValue[]
+}
+
+export interface SnmpSystemInfo {
+  ipAddress: string
+  sysName: string | null
+  sysDescription: string | null
+  sysObjectId: string | null
+  sysUpTimeTicks: number | null
+  sysContact: string | null
+  sysLocation: string | null
+}
+
+export interface SnmpInterface {
+  index: number
+  description: string | null
+  adminStatus: 'Up' | 'Down' | 'Testing' | 'Unknown'
+  operStatus: 'Up' | 'Down' | 'Testing' | 'Unknown'
+  speedBitsPerSecond: number | null
+}

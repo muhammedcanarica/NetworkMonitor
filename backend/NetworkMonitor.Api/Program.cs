@@ -54,6 +54,8 @@ if (frontendOrigins.Length > 0)
 builder.Services.AddSingleton<IPingService, PingService>();
 builder.Services.AddSingleton<IHostNameResolver, HostNameResolver>();
 builder.Services.AddScoped<IIpScannerService, IpScannerService>();
+builder.Services.AddSingleton<ISnmpTransport, SharpSnmpTransport>();
+builder.Services.AddSingleton<ISnmpService, SnmpService>();
 builder.Services.AddSingleton<DeviceStatusTracker>();
 builder.Services.AddSingleton<IMonitoringUpdatePublisher, SignalRMonitoringUpdatePublisher>();
 builder.Services.AddHostedService<DeviceMonitoringService>();

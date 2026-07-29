@@ -34,6 +34,15 @@ export interface DeviceSummary {
   maxLatencyMs: number | null
 }
 
+export interface DeviceMonitoringUpdate {
+  deviceId: number
+  status: DeviceStatus
+  lastCheckedAt: string | null
+  lastSeenAt: string | null
+  lastLatencyMs: number | null
+  isMonitoringEnabled: boolean
+}
+
 export interface CreateDeviceRequest {
   name: string
   ipAddress: string

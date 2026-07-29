@@ -2,16 +2,44 @@ import { useCallback, useMemo } from 'react'
 import { Activity, AlertTriangle, CircleX, Server } from 'lucide-react'
 import { devicesApi } from '../api/devices'
 import { DeviceTable } from '../components/devices/DeviceTable'
+import { ConnectionIndicator } from '../components/realtime/ConnectionIndicator'
 import { MetricCard } from '../components/ui/MetricCard'
 import { StatePanel } from '../components/ui/StatePanel'
-import { usePolling } from '../hooks/usePolling'
+import { useRealtimeResource } from '../hooks/useRealtimeResource'
+import { useMonitoringUpdates } from '../realtime/useRealtime'
+import type { DeviceMonitoringUpdate } from '../types/api'
 
 export function OverviewPage() {
   const loadDevices = useCallback(
     (signal: AbortSignal) => devicesApi.list(signal),
     [],
   )
-  const { data: devices, error, isLoading, isRefreshing, refresh } = usePolling(loadDevices)
+  const {
+    data: devices,
+    setData: setDevices,
+    error,
+    isLoading,
+    isRefreshing,
+    refresh,
+  } = useRealtimeResource(loadDevices)
+
+  const applyMonitoringUpdate = useCallback((update: DeviceMonitoringUpdate) => {
+    setDevices((currentDevices) =>
+      currentDevices?.map((device) =>
+        device.id === update.deviceId
+          ? {
+              ...device,
+              status: update.status,
+              lastCheckedAt: update.lastCheckedAt,
+              lastSeenAt: update.lastSeenAt,
+              lastLatencyMs: update.lastLatencyMs,
+              isMonitoringEnabled: update.isMonitoringEnabled,
+            }
+          : device,
+      ) ?? null,
+    )
+  }, [setDevices])
+  useMonitoringUpdates(applyMonitoringUpdate)
 
   const counts = useMemo(() => ({
     total: devices?.length ?? 0,
@@ -28,10 +56,7 @@ export function OverviewPage() {
           <h1>Overview</h1>
           <p>Live health and latency status across monitored devices.</p>
         </div>
-        <div className={`refresh-indicator ${isRefreshing ? 'is-refreshing' : ''}`}>
-          <span aria-hidden="true" />
-          {isRefreshing ? 'Refreshing' : 'Live'}
-        </div>
+        <ConnectionIndicator compact isSyncing={isRefreshing} />
       </header>
 
       <section className="metrics-grid" aria-label="Device summary">

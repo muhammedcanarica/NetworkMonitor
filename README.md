@@ -17,7 +17,7 @@ A web-based network monitoring platform built with ASP.NET Core and React. The M
 - Background ICMP monitoring
 - Persistent ping check history and 24-hour monitoring summaries
 - Responsive Overview, Devices, and Device Detail screens
-- Live status polling every five seconds
+- Realtime monitoring updates via SignalR with REST fallback
 - Latency history charts and recent check results
 
 Monitoring status counters are kept in process memory for the MVP and reset when the API restarts.

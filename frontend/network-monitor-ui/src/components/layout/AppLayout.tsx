@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
+import { ConnectionIndicator } from '../realtime/ConnectionIndicator'
 
 interface ToolLink {
   label: string
@@ -60,11 +61,7 @@ export function AppLayout() {
         </nav>
 
         <div className="sidebar-footer">
-          <span className="live-dot" aria-hidden="true" />
-          <span>
-            <strong>Live monitoring</strong>
-            <small>Refreshes every 5 seconds</small>
-          </span>
+          <ConnectionIndicator />
         </div>
       </aside>
 

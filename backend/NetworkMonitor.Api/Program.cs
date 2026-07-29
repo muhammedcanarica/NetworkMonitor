@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using NetworkMonitor.Api.Configuration;
 using NetworkMonitor.Api.Data;
+using NetworkMonitor.Api.Hubs;
 using NetworkMonitor.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,16 +30,22 @@ builder.Services
     .AddJsonOptions(options =>
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddOpenApi();
+builder.Services
+    .AddSignalR()
+    .AddJsonProtocol(options =>
+        options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 if (frontendOrigins.Length > 0)
 {
     builder.Services.AddCors(options =>
         options.AddPolicy("Frontend", policy =>
             policy.WithOrigins(frontendOrigins)
                 .AllowAnyHeader()
-                .AllowAnyMethod()));
+                .AllowAnyMethod()
+                .AllowCredentials()));
 }
 builder.Services.AddSingleton<IPingService, PingService>();
 builder.Services.AddSingleton<DeviceStatusTracker>();
+builder.Services.AddSingleton<IMonitoringUpdatePublisher, SignalRMonitoringUpdatePublisher>();
 builder.Services.AddHostedService<DeviceMonitoringService>();
 
 var app = builder.Build();
@@ -54,5 +61,6 @@ if (frontendOrigins.Length > 0)
     app.UseCors("Frontend");
 }
 app.MapControllers();
+app.MapHub<MonitoringHub>("/hubs/monitoring");
 
 app.Run();

@@ -39,10 +39,10 @@
 }
 
 .brand > span:last-child,
-.sidebar-footer > span:last-child { display: flex; flex-direction: column; }
+.connection-indicator > span:last-child { display: flex; flex-direction: column; }
 .brand strong { color: var(--text-strong); font-size: 15px; letter-spacing: 0.02em; }
 .brand small,
-.sidebar-footer small { color: var(--muted); font-size: 11px; margin-top: 2px; }
+.connection-indicator small { color: var(--muted); font-size: 11px; margin-top: 2px; }
 
 .primary-nav { display: flex; flex: 1; flex-direction: column; padding: 22px 14px; overflow-y: auto; }
 .nav-section-label { padding: 0 10px 9px; color: #53657c; font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
@@ -81,7 +81,15 @@
   background: rgba(13, 23, 36, 0.75);
 }
 .sidebar-footer strong { color: #aab6c7; font-size: 11px; }
-.live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 9px rgba(64, 211, 156, 0.65); }
+.connection-indicator { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.connection-dot { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; background: #718299; box-shadow: 0 0 8px rgba(113, 130, 153, 0.4); }
+.connection-connected .connection-dot { background: var(--green); box-shadow: 0 0 9px rgba(64, 211, 156, 0.65); }
+.connection-connecting .connection-dot { background: var(--cyan); box-shadow: 0 0 9px rgba(48, 199, 215, 0.55); }
+.connection-reconnecting .connection-dot { background: var(--amber); box-shadow: 0 0 9px rgba(245, 185, 66, 0.55); }
+.connection-disconnected .connection-dot { background: var(--red); box-shadow: 0 0 9px rgba(241, 111, 122, 0.45); }
+.connection-connecting .connection-dot,
+.connection-reconnecting .connection-dot,
+.connection-indicator.is-syncing .connection-dot { animation: pulse 1s infinite; }
 
 .main-content { min-height: 100vh; margin-left: 244px; }
 .page { width: min(1480px, 100%); margin: 0 auto; padding: 40px clamp(24px, 4vw, 60px) 64px; }
@@ -102,7 +110,7 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
 .page-header p,
 .panel-header p { margin-bottom: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
 
-.refresh-indicator {
+.connection-indicator.compact {
   display: flex;
   align-items: center;
   gap: 7px;
@@ -113,8 +121,7 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
-.refresh-indicator span { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 9px rgba(64, 211, 156, 0.4); }
-.refresh-indicator.is-refreshing span { animation: pulse 1s infinite; }
+.connection-indicator.compact strong { color: inherit; font-size: inherit; }
 
 .metrics-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
 .metric-card {

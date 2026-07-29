@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NetworkMonitor.Api.Configuration;
 using NetworkMonitor.Api.Data;
+using NetworkMonitor.Api.Dtos;
 using NetworkMonitor.Api.Models;
 
 namespace NetworkMonitor.Api.Services;
@@ -11,6 +12,7 @@ public sealed class DeviceMonitoringService(
     IServiceScopeFactory scopeFactory,
     IPingService pingService,
     DeviceStatusTracker statusTracker,
+    IMonitoringUpdatePublisher updatePublisher,
     IOptions<MonitoringOptions> monitoringOptions,
     ILogger<DeviceMonitoringService> logger) : BackgroundService
 {
@@ -87,6 +89,7 @@ public sealed class DeviceMonitoringService(
             .Where(device => targetIds.Contains(device.Id) && device.IsMonitoringEnabled)
             .ToDictionaryAsync(device => device.Id, cancellationToken);
 
+        var updates = new List<DeviceMonitoringUpdate>();
         foreach (var outcome in outcomes)
         {
             if (!devices.TryGetValue(outcome.Target.DeviceId, out var device)
@@ -96,9 +99,15 @@ public sealed class DeviceMonitoringService(
             }
 
             dbContext.CheckResults.Add(ApplyOutcome(device, outcome));
+            updates.Add(DeviceMonitoringUpdate.FromDevice(device));
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        foreach (var update in updates)
+        {
+            await updatePublisher.PublishAsync(update, cancellationToken);
+        }
     }
 
     private CheckResult ApplyOutcome(Device device, PingOutcome outcome)

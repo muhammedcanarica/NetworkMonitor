@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   Activity,
   ArrowDownToLine,
@@ -20,11 +20,18 @@ import {
   YAxis,
 } from 'recharts'
 import { devicesApi } from '../api/devices'
+import { ConnectionIndicator } from '../components/realtime/ConnectionIndicator'
 import { MetricCard } from '../components/ui/MetricCard'
 import { StatePanel } from '../components/ui/StatePanel'
 import { StatusBadge } from '../components/ui/StatusBadge'
-import { usePolling } from '../hooks/usePolling'
-import type { CheckResult, Device, DeviceSummary } from '../types/api'
+import { useRealtimeResource } from '../hooks/useRealtimeResource'
+import { useMonitoringUpdates } from '../realtime/useRealtime'
+import type {
+  CheckResult,
+  Device,
+  DeviceMonitoringUpdate,
+  DeviceSummary,
+} from '../types/api'
 import {
   formatLatency,
   formatLocalDateTime,
@@ -60,7 +67,49 @@ export function DeviceDetailPage() {
     return { device, summary, checks }
   }, [deviceId, isValidId])
 
-  const { data, error, isLoading, isRefreshing, refresh } = usePolling(loadDetail)
+  const {
+    data,
+    setData,
+    error,
+    isLoading,
+    isRefreshing,
+    refresh,
+  } = useRealtimeResource(loadDetail)
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const scheduleHistoryRefresh = useCallback(() => {
+    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
+    refreshTimerRef.current = setTimeout(() => {
+      refreshTimerRef.current = null
+      refresh()
+    }, 250)
+  }, [refresh])
+
+  const applyMonitoringUpdate = useCallback((update: DeviceMonitoringUpdate) => {
+    if (update.deviceId !== deviceId) return
+
+    setData((currentData) =>
+      currentData
+        ? {
+            ...currentData,
+            device: {
+              ...currentData.device,
+              status: update.status,
+              lastCheckedAt: update.lastCheckedAt,
+              lastSeenAt: update.lastSeenAt,
+              lastLatencyMs: update.lastLatencyMs,
+              isMonitoringEnabled: update.isMonitoringEnabled,
+            },
+          }
+        : currentData,
+    )
+    scheduleHistoryRefresh()
+  }, [deviceId, scheduleHistoryRefresh, setData])
+  useMonitoringUpdates(applyMonitoringUpdate)
+
+  useEffect(() => () => {
+    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
+  }, [])
 
   const chartData = useMemo<ChartPoint[]>(
     () => (data?.checks ?? [])
@@ -108,9 +157,7 @@ export function DeviceDetailPage() {
           </div>
           <p className="mono">{device.ipAddress}</p>
         </div>
-        <div className={`refresh-indicator ${isRefreshing ? 'is-refreshing' : ''}`}>
-          <span aria-hidden="true" /> {isRefreshing ? 'Refreshing' : 'Live'}
-        </div>
+        <ConnectionIndicator compact isSyncing={isRefreshing} />
       </header>
 
       {error && <div className="inline-alert" role="alert">{error} Showing the last successful result.</div>}

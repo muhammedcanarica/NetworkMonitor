@@ -15,6 +15,7 @@ public sealed class DeviceMonitoringService(
     ILogger<DeviceMonitoringService> logger) : BackgroundService
 {
     private readonly MonitoringOptions _options = monitoringOptions.Value;
+    private DateTimeOffset _nextHistoryCleanupAt = DateTimeOffset.MinValue;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -48,6 +49,8 @@ public sealed class DeviceMonitoringService(
     {
         await using var scope = scopeFactory.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<NetworkMonitorDbContext>();
+
+        await CleanupHistoryIfDue(dbContext, DateTimeOffset.UtcNow, cancellationToken);
 
         var targets = await dbContext.Devices
             .AsNoTracking()
@@ -92,13 +95,13 @@ public sealed class DeviceMonitoringService(
                 continue;
             }
 
-            ApplyOutcome(device, outcome);
+            dbContext.CheckResults.Add(ApplyOutcome(device, outcome));
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    private void ApplyOutcome(Device device, PingOutcome outcome)
+    private CheckResult ApplyOutcome(Device device, PingOutcome outcome)
     {
         var previousStatus = device.Status;
         var state = statusTracker.ApplyResult(
@@ -121,9 +124,9 @@ public sealed class DeviceMonitoringService(
         {
             device.LastLatencyMs = null;
             logger.LogDebug(
-                "Ping to device {IpAddress} failed: {Error}",
+                "Ping to device {IpAddress} failed: {FailureReason}",
                 device.IpAddress,
-                outcome.Result.Error);
+                outcome.Result.FailureReason);
         }
 
         if (previousStatus != device.Status)
@@ -133,6 +136,49 @@ public sealed class DeviceMonitoringService(
                 device.IpAddress,
                 previousStatus,
                 device.Status);
+        }
+
+        return CheckResult.Create(
+            device.Id,
+            outcome.CheckedAt,
+            outcome.Result,
+            device.Status);
+    }
+
+    private async Task CleanupHistoryIfDue(
+        NetworkMonitorDbContext dbContext,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        if (now < _nextHistoryCleanupAt)
+        {
+            return;
+        }
+
+        _nextHistoryCleanupAt = now.AddDays(1);
+        var cutoff = now.AddDays(-_options.HistoryRetentionDays);
+
+        try
+        {
+            var deletedCount = await dbContext.CheckResults
+                .Where(result => result.CheckedAt < cutoff)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            if (deletedCount > 0)
+            {
+                logger.LogInformation(
+                    "Deleted {CheckResultCount} monitoring check results older than {Cutoff}.",
+                    deletedCount,
+                    cutoff);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Monitoring history cleanup failed.");
         }
     }
 

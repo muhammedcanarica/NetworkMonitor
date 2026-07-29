@@ -13,4 +13,6 @@ public sealed class MonitoringOptions
     public int RecoveryThreshold { get; init; } = 2;
 
     public int MaxConcurrentPings { get; init; } = 10;
+
+    public int HistoryRetentionDays { get; init; } = 7;
 }

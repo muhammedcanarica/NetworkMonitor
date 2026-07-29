@@ -8,6 +8,8 @@ public sealed class NetworkMonitorDbContext(DbContextOptions<NetworkMonitorDbCon
 {
     public DbSet<Device> Devices => Set<Device>();
 
+    public DbSet<CheckResult> CheckResults => Set<CheckResult>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         var device = modelBuilder.Entity<Device>();
@@ -39,5 +41,28 @@ public sealed class NetworkMonitorDbContext(DbContextOptions<NetworkMonitorDbCon
 
         device.Property(item => item.UpdatedAt)
             .IsRequired();
+
+        var checkResult = modelBuilder.Entity<CheckResult>();
+
+        checkResult.Property(item => item.CheckedAt)
+            .HasConversion(
+                value => value.ToUnixTimeMilliseconds(),
+                value => DateTimeOffset.FromUnixTimeMilliseconds(value))
+            .IsRequired();
+
+        checkResult.Property(item => item.DeviceStatus)
+            .HasConversion<string>()
+            .HasMaxLength(16)
+            .IsRequired();
+
+        checkResult.Property(item => item.FailureReason)
+            .HasMaxLength(100);
+
+        checkResult.HasIndex(item => new { item.DeviceId, item.CheckedAt });
+
+        checkResult.HasOne(item => item.Device)
+            .WithMany(deviceItem => deviceItem.CheckResults)
+            .HasForeignKey(item => item.DeviceId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

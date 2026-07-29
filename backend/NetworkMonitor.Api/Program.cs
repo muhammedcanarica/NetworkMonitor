@@ -19,6 +19,7 @@ builder.Services
     .Validate(options => options.FailureThreshold > 0, "Failure threshold must be greater than zero.")
     .Validate(options => options.RecoveryThreshold > 0, "Recovery threshold must be greater than zero.")
     .Validate(options => options.MaxConcurrentPings > 0, "Maximum concurrent pings must be greater than zero.")
+    .Validate(options => options.HistoryRetentionDays > 0, "History retention days must be greater than zero.")
     .ValidateOnStart();
 builder.Services
     .AddControllers()

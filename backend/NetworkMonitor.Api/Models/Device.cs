@@ -23,4 +23,6 @@ public sealed class Device
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }
+
+    public ICollection<CheckResult> CheckResults { get; set; } = new List<CheckResult>();
 }

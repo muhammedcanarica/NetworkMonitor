@@ -8,6 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' was not found.");
+var frontendOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? [];
 
 builder.Services.AddDbContext<NetworkMonitorDbContext>(options =>
     options.UseSqlite(connectionString));
@@ -26,6 +29,14 @@ builder.Services
     .AddJsonOptions(options =>
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddOpenApi();
+if (frontendOrigins.Length > 0)
+{
+    builder.Services.AddCors(options =>
+        options.AddPolicy("Frontend", policy =>
+            policy.WithOrigins(frontendOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod()));
+}
 builder.Services.AddSingleton<IPingService, PingService>();
 builder.Services.AddSingleton<DeviceStatusTracker>();
 builder.Services.AddHostedService<DeviceMonitoringService>();
@@ -38,6 +49,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+if (frontendOrigins.Length > 0)
+{
+    app.UseCors("Frontend");
+}
 app.MapControllers();
 
 app.Run();

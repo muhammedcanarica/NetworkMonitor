@@ -1,0 +1,196 @@
+import { useCallback, useMemo } from 'react'
+import {
+  Activity,
+  ArrowDownToLine,
+  ArrowLeft,
+  ArrowUpToLine,
+  Clock3,
+  Gauge,
+  ListChecks,
+  XCircle,
+} from 'lucide-react'
+import { Link, useParams } from 'react-router-dom'
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import { devicesApi } from '../api/devices'
+import { MetricCard } from '../components/ui/MetricCard'
+import { StatePanel } from '../components/ui/StatePanel'
+import { StatusBadge } from '../components/ui/StatusBadge'
+import { usePolling } from '../hooks/usePolling'
+import type { CheckResult, Device, DeviceSummary } from '../types/api'
+import {
+  formatLatency,
+  formatLocalDateTime,
+  formatPercentage,
+  formatRelativeTime,
+  formatTime,
+} from '../utils/format'
+
+interface DetailData {
+  device: Device
+  summary: DeviceSummary
+  checks: CheckResult[]
+}
+
+interface ChartPoint {
+  checkedAt: string
+  timeLabel: string
+  latencyMs: number | null
+}
+
+export function DeviceDetailPage() {
+  const { id } = useParams()
+  const deviceId = Number(id)
+  const isValidId = Number.isInteger(deviceId) && deviceId > 0
+
+  const loadDetail = useCallback(async (signal: AbortSignal): Promise<DetailData> => {
+    if (!isValidId) throw new Error('Geçersiz cihaz kimliği.')
+    const [device, summary, checks] = await Promise.all([
+      devicesApi.get(deviceId, signal),
+      devicesApi.summary(deviceId, signal),
+      devicesApi.checks(deviceId, 100, signal),
+    ])
+    return { device, summary, checks }
+  }, [deviceId, isValidId])
+
+  const { data, error, isLoading, isRefreshing, refresh } = usePolling(loadDetail)
+
+  const chartData = useMemo<ChartPoint[]>(
+    () => (data?.checks ?? [])
+      .slice()
+      .reverse()
+      .map((check) => ({
+        checkedAt: check.checkedAt,
+        timeLabel: formatTime(check.checkedAt),
+        latencyMs: check.isSuccess ? check.latencyMs : null,
+      })),
+    [data?.checks],
+  )
+
+  if (isLoading && !data) {
+    return <div className="page"><StatePanel type="loading" title="Loading device" message="Collecting device details and monitoring history…" /></div>
+  }
+
+  if (error && !data) {
+    return (
+      <div className="page">
+        <Link className="back-link" to="/devices"><ArrowLeft size={16} /> Back to devices</Link>
+        <StatePanel
+          type="error"
+          title="Device details unavailable"
+          message={error}
+          action={<button className="button secondary" type="button" onClick={refresh}>Try again</button>}
+        />
+      </div>
+    )
+  }
+
+  if (!data) return null
+
+  const { device, summary, checks } = data
+
+  return (
+    <div className="page">
+      <Link className="back-link" to="/devices"><ArrowLeft size={16} /> Back to devices</Link>
+      <header className="page-header detail-heading">
+        <div>
+          <span className="eyebrow">Device #{device.id}</span>
+          <div className="title-with-status">
+            <h1>{device.name}</h1>
+            <StatusBadge status={device.status} />
+          </div>
+          <p className="mono">{device.ipAddress}</p>
+        </div>
+        <div className={`refresh-indicator ${isRefreshing ? 'is-refreshing' : ''}`}>
+          <span aria-hidden="true" /> {isRefreshing ? 'Refreshing' : 'Live'}
+        </div>
+      </header>
+
+      {error && <div className="inline-alert" role="alert">{error} Showing the last successful result.</div>}
+
+      <section className="device-info-grid">
+        <div><span>Description</span><strong>{device.description || 'No description'}</strong></div>
+        <div><span>Monitoring</span><strong>{device.isMonitoringEnabled ? 'Enabled' : 'Paused'}</strong></div>
+        <div><span>Last checked</span><strong title={formatLocalDateTime(device.lastCheckedAt)}>{formatRelativeTime(device.lastCheckedAt)}</strong></div>
+        <div><span>Last seen</span><strong title={formatLocalDateTime(device.lastSeenAt)}>{formatRelativeTime(device.lastSeenAt)}</strong></div>
+        <div><span>Current latency</span><strong>{formatLatency(device.lastLatencyMs)}</strong></div>
+      </section>
+
+      <section className="metrics-grid detail-metrics" aria-label="24 hour monitoring summary">
+        <MetricCard label="24h uptime" value={formatPercentage(summary.uptimePercentage)} hint={`${summary.successfulChecks} successful checks`} icon={Activity} tone="up" />
+        <MetricCard label="Average latency" value={formatLatency(summary.averageLatencyMs)} hint="Successful checks" icon={Gauge} />
+        <MetricCard label="Minimum latency" value={formatLatency(summary.minLatencyMs)} hint="Fastest response" icon={ArrowDownToLine} />
+        <MetricCard label="Maximum latency" value={formatLatency(summary.maxLatencyMs)} hint="Slowest response" icon={ArrowUpToLine} />
+        <MetricCard label="Total checks" value={summary.totalChecks} hint="Last 24 hours" icon={ListChecks} />
+        <MetricCard label="Failed" value={summary.failedChecks} hint="Last 24 hours" icon={XCircle} tone="down" />
+      </section>
+
+      <section className="panel chart-panel">
+        <header className="panel-header">
+          <div>
+            <h2>Latency history</h2>
+            <p>Last {Math.min(checks.length, 100)} checks. Gaps indicate failed checks.</p>
+          </div>
+          <span className="latency-range">{formatLatency(summary.minLatencyMs)} — {formatLatency(summary.maxLatencyMs)}</span>
+        </header>
+        {chartData.length === 0 ? (
+          <StatePanel type="empty" title="No check history" message="Latency data will appear after the monitoring engine completes its first check." />
+        ) : (
+          <div className="chart-container" aria-label="Latency history chart">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 12, right: 20, left: -12, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="rgba(148, 163, 184, 0.14)" />
+                <XAxis dataKey="timeLabel" tick={{ fill: '#738297', fontSize: 11 }} axisLine={false} tickLine={false} minTickGap={32} />
+                <YAxis unit=" ms" tick={{ fill: '#738297', fontSize: 11 }} axisLine={false} tickLine={false} width={62} />
+                <Tooltip
+                  contentStyle={{ background: '#111a27', border: '1px solid #27364b', borderRadius: 10 }}
+                  labelStyle={{ color: '#e6edf7' }}
+                  formatter={(value) => [`${String(value)} ms`, 'Latency']}
+                  labelFormatter={(_, payload) => {
+                    const point = payload[0]?.payload as ChartPoint | undefined
+                    return point ? formatLocalDateTime(point.checkedAt) : ''
+                  }}
+                />
+                <Line type="monotone" dataKey="latencyMs" name="Latency" stroke="#30c7d7" strokeWidth={2.5} dot={false} activeDot={{ r: 4, fill: '#30c7d7' }} connectNulls={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </section>
+
+      <section className="panel">
+        <header className="panel-header">
+          <div><h2>Recent checks</h2><p>Newest results from the persistent monitoring history.</p></div>
+          <Clock3 size={19} aria-hidden="true" />
+        </header>
+        {checks.length === 0 ? (
+          <StatePanel type="empty" title="No checks recorded" message="Keep monitoring enabled to collect history." />
+        ) : (
+          <div className="table-scroll">
+            <table className="data-table compact-table">
+              <thead><tr><th>Checked at</th><th>Result</th><th>Status</th><th>Latency</th><th>Failure reason</th></tr></thead>
+              <tbody>
+                {checks.map((check) => (
+                  <tr key={check.id}>
+                    <td>{formatLocalDateTime(check.checkedAt)}</td>
+                    <td><span className={check.isSuccess ? 'check-success' : 'check-failed'}>{check.isSuccess ? 'Success' : 'Failed'}</span></td>
+                    <td><StatusBadge status={check.deviceStatus} /></td>
+                    <td className="mono">{formatLatency(check.latencyMs)}</td>
+                    <td>{check.failureReason || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    </div>
+  )
+}

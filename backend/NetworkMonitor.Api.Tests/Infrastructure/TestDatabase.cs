@@ -31,13 +31,15 @@ internal sealed class TestDatabase : IAsyncDisposable
         return new TestDatabase(connection, context);
     }
 
-    public async Task<Device> AddDeviceAsync(string name = "Test Device")
+    public async Task<Device> AddDeviceAsync(
+        string name = "Test Device",
+        string? ipAddress = null)
     {
         var now = DateTimeOffset.UtcNow;
         var device = new Device
         {
             Name = name,
-            IpAddress = $"192.0.2.{Context.Devices.Count() + 1}",
+            IpAddress = ipAddress ?? $"192.0.2.{Context.Devices.Count() + 1}",
             Status = DeviceStatus.Unknown,
             IsMonitoringEnabled = true,
             CreatedAt = now,

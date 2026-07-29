@@ -26,6 +26,14 @@ builder.Services
     .Validate(options => options.HistoryRetentionDays > 0, "History retention days must be greater than zero.")
     .ValidateOnStart();
 builder.Services
+    .AddOptions<IpScannerOptions>()
+    .Bind(builder.Configuration.GetSection(IpScannerOptions.SectionName))
+    .Validate(options => options.PingTimeoutMilliseconds > 0, "IP scanner ping timeout must be greater than zero.")
+    .Validate(options => options.MaxConcurrentPings > 0, "IP scanner concurrency must be greater than zero.")
+    .Validate(options => options.MaxAddressesPerScan > 0, "IP scanner address limit must be greater than zero.")
+    .Validate(options => options.HostNameTimeoutMilliseconds > 0, "IP scanner host name timeout must be greater than zero.")
+    .ValidateOnStart();
+builder.Services
     .AddControllers()
     .AddJsonOptions(options =>
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -44,6 +52,8 @@ if (frontendOrigins.Length > 0)
                 .AllowCredentials()));
 }
 builder.Services.AddSingleton<IPingService, PingService>();
+builder.Services.AddSingleton<IHostNameResolver, HostNameResolver>();
+builder.Services.AddScoped<IIpScannerService, IpScannerService>();
 builder.Services.AddSingleton<DeviceStatusTracker>();
 builder.Services.AddSingleton<IMonitoringUpdatePublisher, SignalRMonitoringUpdatePublisher>();
 builder.Services.AddHostedService<DeviceMonitoringService>();

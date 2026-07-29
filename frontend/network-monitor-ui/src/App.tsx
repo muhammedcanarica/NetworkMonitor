@@ -4,6 +4,7 @@ import { AppLayout } from './components/layout/AppLayout'
 import { DevicesPage } from './pages/DevicesPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { OverviewPage } from './pages/OverviewPage'
+import { IpScannerPage } from './pages/IpScannerPage'
 import { RealtimeProvider } from './realtime/RealtimeProvider'
 import './App.css'
 
@@ -21,6 +22,7 @@ function App() {
           <Route element={<AppLayout />}>
             <Route index element={<OverviewPage />} />
             <Route path="devices" element={<DevicesPage />} />
+            <Route path="tools/ip-scanner" element={<IpScannerPage />} />
             <Route
               path="devices/:id"
               element={

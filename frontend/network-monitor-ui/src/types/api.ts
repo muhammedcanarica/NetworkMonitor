@@ -52,3 +52,20 @@ export interface CreateDeviceRequest {
 export interface UpdateDeviceRequest extends CreateDeviceRequest {
   isMonitoringEnabled: boolean
 }
+
+export interface IpScanHost {
+  ipAddress: string
+  isReachable: boolean
+  latencyMs: number | null
+  hostName: string | null
+  isAlreadyMonitored: boolean
+  deviceId: number | null
+}
+
+export interface IpScanResponse {
+  cidr: string
+  scannedAddresses: number
+  reachableHosts: number
+  durationMs: number
+  results: IpScanHost[]
+}

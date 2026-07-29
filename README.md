@@ -18,6 +18,7 @@ A web-based network monitoring platform built with ASP.NET Core and React. The M
 - Persistent ping check history and 24-hour monitoring summaries
 - Responsive Overview, Devices, and Device Detail screens
 - Realtime monitoring updates via SignalR with REST fallback
+- Bounded IPv4 CIDR discovery with ICMP ping and reverse DNS
 - Latency history charts and recent check results
 
 Monitoring status counters are kept in process memory for the MVP and reset when the API restarts.
@@ -45,7 +46,6 @@ Open `http://localhost:5173`.
 ## Planned Features
 
 - Incident tracking
-- Network discovery
 - SNMP monitoring
 - Interface and bandwidth monitoring
 - Network topology

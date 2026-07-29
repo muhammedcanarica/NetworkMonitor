@@ -26,6 +26,8 @@ public sealed class DevicesController(NetworkMonitorDbContext dbContext) : Contr
                 device.Description,
                 device.Status,
                 device.LastSeenAt,
+                device.LastCheckedAt,
+                device.LastLatencyMs,
                 device.IsMonitoringEnabled,
                 device.CreatedAt,
                 device.UpdatedAt))
@@ -71,6 +73,8 @@ public sealed class DevicesController(NetworkMonitorDbContext dbContext) : Contr
             Description = NormalizeDescription(request.Description),
             Status = DeviceStatus.Unknown,
             LastSeenAt = null,
+            LastCheckedAt = null,
+            LastLatencyMs = null,
             IsMonitoringEnabled = true,
             CreatedAt = now,
             UpdatedAt = now

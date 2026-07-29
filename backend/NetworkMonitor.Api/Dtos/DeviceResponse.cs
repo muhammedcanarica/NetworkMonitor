@@ -9,6 +9,8 @@ public sealed record DeviceResponse(
     string? Description,
     DeviceStatus Status,
     DateTimeOffset? LastSeenAt,
+    DateTimeOffset? LastCheckedAt,
+    long? LastLatencyMs,
     bool IsMonitoringEnabled,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt)
@@ -22,6 +24,8 @@ public sealed record DeviceResponse(
             device.Description,
             device.Status,
             device.LastSeenAt,
+            device.LastCheckedAt,
+            device.LastLatencyMs,
             device.IsMonitoringEnabled,
             device.CreatedAt,
             device.UpdatedAt);

@@ -14,6 +14,10 @@ public sealed class Device
 
     public DateTimeOffset? LastSeenAt { get; set; }
 
+    public DateTimeOffset? LastCheckedAt { get; set; }
+
+    public long? LastLatencyMs { get; set; }
+
     public bool IsMonitoringEnabled { get; set; } = true;
 
     public DateTimeOffset CreatedAt { get; set; }

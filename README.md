@@ -15,6 +15,9 @@ A web-based network monitoring platform built with ASP.NET Core and React.
 - SQLite persistence
 - Device management
 - REST CRUD API
+- Background ICMP monitoring
+
+Monitoring status counters are kept in process memory for the MVP and reset when the API restarts.
 
 ## Planned Features
 

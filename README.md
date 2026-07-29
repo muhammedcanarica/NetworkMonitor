@@ -10,6 +10,12 @@ A web-based network monitoring platform built with ASP.NET Core and React.
 - TypeScript
 - Vite
 
+## Current Backend Capabilities
+
+- SQLite persistence
+- Device management
+- REST CRUD API
+
 ## Planned Features
 
 - Device monitoring
@@ -22,4 +28,3 @@ A web-based network monitoring platform built with ASP.NET Core and React.
 - SNMP monitoring
 - Interface and bandwidth monitoring
 - Network topology
-

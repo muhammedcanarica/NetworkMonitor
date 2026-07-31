@@ -299,6 +299,45 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
 .config-diff-line.removed { color: #f2b2b8; background: rgba(241, 111, 122, 0.09); }
 .config-diff-line.removed > span { color: var(--red); }
 
+.topology-control-panel > .panel-header > svg { color: var(--cyan); }
+.topology-controls { display: grid; grid-template-columns: minmax(220px, 1fr) 150px auto; align-items: end; gap: 14px; padding: 21px 21px 14px; }
+.topology-controls label { display: flex; flex-direction: column; gap: 7px; color: #9dacbf; font-size: 11px; font-weight: 650; }
+.topology-controls input { width: 100%; height: 40px; padding: 0 11px; color: var(--text-strong); border: 1px solid #273950; outline: none; border-radius: 8px; background: #09131f; font-size: 12px; }
+.topology-controls input:focus { border-color: rgba(48, 199, 215, 0.65); box-shadow: 0 0 0 3px rgba(48, 199, 215, 0.08); }
+.topology-controls .button { min-height: 40px; white-space: nowrap; }
+.topology-device-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: 0; padding: 14px 21px 20px; border: 0; border-top: 1px solid var(--border); }
+.topology-device-picker legend { width: 100%; padding: 0 0 8px; color: #9dacbf; font-size: 11px; font-weight: 650; }
+.topology-device-picker legend span { margin-left: 6px; color: #62748b; font-weight: 500; }
+.topology-device-picker > p { grid-column: 1 / -1; margin: 0; color: #718399; font-size: 11px; }
+.topology-device-option { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 10px; color: #a6b5c5; border: 1px solid var(--border); border-radius: 8px; background: rgba(4, 12, 21, 0.25); cursor: pointer; }
+.topology-device-option:hover { border-color: rgba(48, 199, 215, 0.3); }
+.topology-device-option input { width: 15px; height: 15px; accent-color: var(--cyan); }
+.topology-device-option span { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.topology-device-option strong { overflow: hidden; color: #b7c5d4; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.topology-device-option small { color: #61738a; font-size: 9px; }
+.topology-security-note { display: flex; align-items: flex-start; gap: 10px; padding: 14px 21px; color: #76879d; border-top: 1px solid var(--border); background: rgba(48, 199, 215, 0.035); font-size: 11px; line-height: 1.5; }
+.topology-security-note svg { flex: 0 0 auto; color: var(--cyan); }
+.topology-security-note strong { color: #9fb1c5; }
+.topology-summary { margin-top: 18px; }
+.topology-graph-shell { overflow: hidden; background: #08111c; }
+.topology-graph-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; color: #65778e; border-bottom: 1px solid var(--border); background: rgba(4, 12, 21, 0.4); font-size: 10px; }
+.topology-graph-toolbar > div { display: flex; gap: 5px; }
+.topology-graph-toolbar button { min-width: 30px; height: 26px; color: #9bb0c6; border: 1px solid #2a3b51; border-radius: 5px; background: #0c1826; font-size: 10px; font-weight: 700; }
+.topology-graph-toolbar button:hover { color: #dcfaff; border-color: rgba(48, 199, 215, 0.45); }
+.topology-graph { display: block; width: 100%; min-height: 420px; touch-action: none; cursor: grab; user-select: none; }
+.topology-graph:active { cursor: grabbing; }
+.topology-edge line { stroke: #44667c; stroke-width: 2; }
+.topology-edge text { fill: #8198ac; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; text-anchor: middle; paint-order: stroke; stroke: #08111c; stroke-width: 4px; }
+.topology-node { outline: none; }
+.topology-node circle { fill: #102536; stroke: #4b718a; stroke-width: 2; transition: 150ms ease; }
+.topology-node.managed circle { fill: #0f2a35; stroke: var(--cyan); }
+.topology-node.discovered circle { fill: #202630; stroke: #8796a6; stroke-dasharray: 4 3; }
+.topology-node.clickable { cursor: pointer; }
+.topology-node.clickable:hover circle, .topology-node.clickable:focus circle { stroke-width: 4; filter: drop-shadow(0 0 8px rgba(48, 199, 215, 0.38)); }
+.topology-node-name { fill: #d7e8f5; font-size: 12px; font-weight: 700; text-anchor: middle; }
+.topology-node-ip { fill: #83a0b6; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 9px; text-anchor: middle; }
+.topology-node-tag { fill: #b0bcc7; font-size: 7px; font-weight: 800; letter-spacing: 0.07em; text-anchor: middle; }
+
 .protocol-badge { padding: 5px 8px; color: var(--green); border: 1px solid rgba(64, 211, 156, 0.22); border-radius: 6px; background: rgba(64, 211, 156, 0.06); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 9px; font-weight: 750; letter-spacing: 0.06em; }
 .snmp-connection-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; padding: 21px; }
 .snmp-connection-grid label,
@@ -433,6 +472,7 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
   .config-backup-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .config-compare-form { grid-template-columns: 1fr 1fr; }
   .config-compare-form .button { grid-column: 1 / -1; }
+  .topology-device-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 800px) {
@@ -462,6 +502,8 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
   .config-backup-form { grid-template-columns: 1fr; }
   .config-compare-form { grid-template-columns: 1fr; }
   .config-compare-form .button { grid-column: auto; }
+  .topology-controls { grid-template-columns: 1fr 1fr; }
+  .topology-controls .button { grid-column: 1 / -1; }
   .config-result-actions,
   .device-tools-header-action { width: 100%; justify-content: space-between; }
 }
@@ -484,4 +526,7 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
   .snmp-tabs { display: grid; grid-template-columns: 1fr; }
   .snmp-tabs button { justify-content: center; }
   .snmp-single-result { grid-template-columns: 1fr; gap: 7px; }
+  .topology-controls,
+  .topology-device-picker { grid-template-columns: 1fr; }
+  .topology-graph { min-height: 330px; }
 }

@@ -30,4 +30,15 @@ public static class SnmpOids
         public const string AdminStatus = "1.3.6.1.2.1.2.2.1.7";
         public const string OperStatus = "1.3.6.1.2.1.2.2.1.8";
     }
+
+    public static class Lldp
+    {
+        // IEEE 802.1AB LLDP-MIB. These roots are fixed by the server; clients cannot provide OIDs.
+        public const string LocalPortId = "1.0.8802.1.1.2.1.3.7.1.3";
+        public const string RemoteChassisId = "1.0.8802.1.1.2.1.4.1.1.5";
+        public const string RemotePortId = "1.0.8802.1.1.2.1.4.1.1.7";
+        public const string RemotePortDescription = "1.0.8802.1.1.2.1.4.1.1.8";
+        public const string RemoteSystemName = "1.0.8802.1.1.2.1.4.1.1.9";
+        public const string RemoteManagementAddress = "1.0.8802.1.1.2.1.4.2.1.2";
+    }
 }

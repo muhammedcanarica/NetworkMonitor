@@ -52,6 +52,12 @@ builder.Services
     .Validate(options => options.MaxDiffLines > 0, "Configuration backup diff line limit must be greater than zero.")
     .ValidateOnStart();
 builder.Services
+    .AddOptions<TopologyDiscoveryOptions>()
+    .Bind(builder.Configuration.GetSection(TopologyDiscoveryOptions.SectionName))
+    .Validate(options => options.MaxDevicesPerDiscovery > 0, "Topology device limit must be greater than zero.")
+    .Validate(options => options.MaxConcurrentDiscoveries > 0, "Topology concurrency must be greater than zero.")
+    .ValidateOnStart();
+builder.Services
     .AddControllers()
     .AddJsonOptions(options =>
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -82,6 +88,7 @@ builder.Services.AddSingleton<IWakeOnLanPacketSender, UdpWakeOnLanPacketSender>(
 builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
 builder.Services.AddSingleton<ISnmpTransport, SharpSnmpTransport>();
 builder.Services.AddSingleton<ISnmpService, SnmpService>();
+builder.Services.AddScoped<ITopologyDiscoveryService, TopologyDiscoveryService>();
 builder.Services.AddSingleton<DeviceStatusTracker>();
 builder.Services.AddSingleton<IMonitoringUpdatePublisher, SignalRMonitoringUpdatePublisher>();
 builder.Services.AddHostedService<DeviceMonitoringService>();

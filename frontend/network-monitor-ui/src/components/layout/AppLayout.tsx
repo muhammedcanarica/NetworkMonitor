@@ -7,6 +7,7 @@ import {
   Power,
   Radar,
   Server,
+  Share2,
 } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { ConnectionIndicator } from '../realtime/ConnectionIndicator'
@@ -34,6 +35,10 @@ export function AppLayout() {
           <NavLink to="/devices">
             <Server size={18} aria-hidden="true" />
             Devices
+          </NavLink>
+          <NavLink to="/topology">
+            <Share2 size={18} aria-hidden="true" />
+            Topology
           </NavLink>
 
           <span className="nav-section-label tools-label">Tools</span>

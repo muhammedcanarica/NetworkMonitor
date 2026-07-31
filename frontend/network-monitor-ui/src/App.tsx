@@ -10,6 +10,7 @@ import { IpScannerPage } from './pages/IpScannerPage'
 import { PortScannerPage } from './pages/PortScannerPage'
 import { SnmpExplorerPage } from './pages/SnmpExplorerPage'
 import { WakeOnLanPage } from './pages/WakeOnLanPage'
+import { TopologyPage } from './pages/TopologyPage'
 import { RealtimeProvider } from './realtime/RealtimeProvider'
 import './App.css'
 
@@ -27,6 +28,7 @@ function App() {
           <Route element={<AppLayout />}>
             <Route index element={<OverviewPage />} />
             <Route path="devices" element={<DevicesPage />} />
+            <Route path="topology" element={<TopologyPage />} />
             <Route path="tools/ip-scanner" element={<IpScannerPage />} />
             <Route path="tools/config-backup" element={<ConfigBackupPage />} />
             <Route path="tools/config-backup/history" element={<ConfigBackupHistoryPage />} />

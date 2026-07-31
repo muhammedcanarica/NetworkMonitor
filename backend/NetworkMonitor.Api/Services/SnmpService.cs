@@ -7,8 +7,8 @@ namespace NetworkMonitor.Api.Services;
 public sealed class SnmpService(ISnmpTransport transport) : ISnmpService
 {
     public const int MaxWalkResults = 500;
-    public const int MinimumTimeoutMilliseconds = 500;
-    public const int MaximumTimeoutMilliseconds = 10000;
+    public const int MinimumTimeoutMilliseconds = SnmpServiceTimeouts.MinimumMilliseconds;
+    public const int MaximumTimeoutMilliseconds = SnmpServiceTimeouts.MaximumMilliseconds;
 
     public async Task<SnmpValueResponse> GetAsync(
         string ipAddress,

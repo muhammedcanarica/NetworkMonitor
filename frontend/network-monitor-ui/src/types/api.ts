@@ -207,3 +207,37 @@ export interface SnmpInterface {
   operStatus: 'Up' | 'Down' | 'Testing' | 'Unknown'
   speedBitsPerSecond: number | null
 }
+
+export interface TopologyDiscoveryRequest {
+  deviceIds: number[]
+  community: string
+  timeoutMilliseconds: number
+}
+
+export interface TopologyNode {
+  id: string
+  deviceId: number | null
+  ipAddress: string | null
+  name: string
+  status: DeviceStatus | null
+  isManaged: boolean
+}
+
+export interface TopologyEdge {
+  id: string
+  sourceNodeId: string
+  targetNodeId: string
+  localPort: string | null
+  remotePort: string | null
+  discoveryProtocol: 'LLDP'
+}
+
+export interface TopologyDiscoveryResponse {
+  nodes: TopologyNode[]
+  edges: TopologyEdge[]
+  scannedDevices: number
+  successfulDevices: number
+  failedDevices: number
+  durationMs: number
+  warnings: string[]
+}

@@ -5,6 +5,8 @@ import type {
   SnmpInterface,
   SnmpMonitoringProfile,
   UpdateSnmpMonitoringRequest,
+  InterfaceBandwidthThreshold,
+  UpdateInterfaceBandwidthThresholdRequest,
 } from '../types/api'
 
 export const snmpMonitoringApi = {
@@ -14,4 +16,7 @@ export const snmpMonitoringApi = {
   disable: (deviceId: number) => apiRequest<void>(`/api/devices/${deviceId}/snmp-monitoring`, { method: 'DELETE' }),
   summary: (deviceId: number, signal?: AbortSignal) => apiRequest<InterfaceTrafficSummary[]>(`/api/devices/${deviceId}/interface-traffic`, { signal }),
   history: (deviceId: number, interfaceIndex: number, hours: number, signal?: AbortSignal) => apiRequest<InterfaceTrafficHistory>(`/api/devices/${deviceId}/interfaces/${interfaceIndex}/traffic?hours=${hours}`, { signal }),
+  getThreshold: (deviceId: number, interfaceIndex: number, signal?: AbortSignal) => apiRequest<InterfaceBandwidthThreshold | null>(`/api/devices/${deviceId}/interfaces/${interfaceIndex}/bandwidth-threshold`, { signal }),
+  updateThreshold: (deviceId: number, interfaceIndex: number, request: UpdateInterfaceBandwidthThresholdRequest) => apiRequest<InterfaceBandwidthThreshold>(`/api/devices/${deviceId}/interfaces/${interfaceIndex}/bandwidth-threshold`, { method: 'PUT', body: JSON.stringify(request) }),
+  deleteThreshold: (deviceId: number, interfaceIndex: number) => apiRequest<void>(`/api/devices/${deviceId}/interfaces/${interfaceIndex}/bandwidth-threshold`, { method: 'DELETE' }),
 }

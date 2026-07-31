@@ -100,18 +100,41 @@ public sealed class SnmpMonitoringConfigurationService(
     public async Task<IReadOnlyList<InterfaceTrafficSummaryResponse>> GetSummaryAsync(int deviceId, CancellationToken cancellationToken)
     {
         await EnsureDeviceExists(deviceId, cancellationToken);
-        var interfaces = await dbContext.SnmpMonitoredInterfaces.AsNoTracking()
+        var interfaces = await dbContext.SnmpMonitoredInterfaces.AsNoTracking().Include(item => item.BandwidthThreshold)
             .Where(item => item.Profile.DeviceId == deviceId && item.IsEnabled)
             .OrderBy(item => item.InterfaceIndex)
             .ToListAsync(cancellationToken);
         var result = new List<InterfaceTrafficSummaryResponse>(interfaces.Count);
+        var interfaceIds = interfaces.Select(item => item.Id).ToArray();
+        var openIncidents = await dbContext.Incidents.AsNoTracking()
+            .Where(item => item.Status == IncidentStatus.Open && item.SnmpMonitoredInterfaceId.HasValue && interfaceIds.Contains(item.SnmpMonitoredInterfaceId.Value))
+            .Select(item => new { item.SnmpMonitoredInterfaceId, item.Type })
+            .ToListAsync(cancellationToken);
         foreach (var item in interfaces)
         {
             var sample = await dbContext.InterfaceTrafficSamples.AsNoTracking()
                 .Where(value => value.SnmpMonitoredInterfaceId == item.Id)
                 .OrderByDescending(value => value.Timestamp)
                 .FirstOrDefaultAsync(cancellationToken);
-            result.Add(new InterfaceTrafficSummaryResponse(item.InterfaceIndex, item.InterfaceName, item.Description, sample?.OperStatus, sample?.Timestamp, sample?.InBitsPerSecond, sample?.OutBitsPerSecond));
+            result.Add(new InterfaceTrafficSummaryResponse(
+                item.InterfaceIndex,
+                item.InterfaceName,
+                item.Description,
+                sample?.OperStatus,
+                sample?.Timestamp,
+                sample?.InBitsPerSecond,
+                sample?.OutBitsPerSecond,
+                item.BandwidthThreshold is null ? null : new InterfaceBandwidthThresholdResponse(
+                    item.InterfaceIndex,
+                    item.BandwidthThreshold.InboundThresholdBitsPerSecond / 1_000_000d,
+                    item.BandwidthThreshold.OutboundThresholdBitsPerSecond / 1_000_000d,
+                    item.BandwidthThreshold.BreachSampleCount,
+                    item.BandwidthThreshold.RecoverySampleCount,
+                    item.BandwidthThreshold.IsEnabled,
+                    item.BandwidthThreshold.CreatedAt,
+                    item.BandwidthThreshold.UpdatedAt),
+                openIncidents.Any(incident => incident.SnmpMonitoredInterfaceId == item.Id && incident.Type == IncidentType.InterfaceInboundBandwidthHigh),
+                openIncidents.Any(incident => incident.SnmpMonitoredInterfaceId == item.Id && incident.Type == IncidentType.InterfaceOutboundBandwidthHigh)));
         }
         return result;
     }

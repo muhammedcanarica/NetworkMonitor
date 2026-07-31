@@ -241,7 +241,7 @@ export function DeviceDetailPage() {
           <div className="device-incident-list">{incidents.slice(0, 5).map((incident) => (
             <div key={incident.id} className={`device-incident ${incident.status === 'Open' ? 'open' : ''}`}>
               <span className={`incident-status ${incident.status.toLowerCase()}`}>{incident.status}</span>
-              <div><strong>{incident.summary}</strong><small>{incident.status === 'Open' ? `Started ${formatRelativeTime(incident.startedAt)}` : `Resolved · ${formatDuration(incident.durationSeconds)}`}</small></div>
+              <div><strong>{incident.summary}</strong><small>{incident.interfaceName ? `${incident.interfaceName} · ` : ''}{incident.status === 'Open' ? `Started ${formatRelativeTime(incident.startedAt)}` : `Resolved · ${formatDuration(incident.durationSeconds)}`}</small></div>
             </div>
           ))}</div>
         )}

@@ -10,6 +10,7 @@ public sealed class SnmpBandwidthProfilePoller(
     NetworkMonitorDbContext dbContext,
     INetworkOperationCredentialResolver credentialResolver,
     ISnmpBandwidthProbe probe,
+    IInterfaceBandwidthThresholdEvaluator thresholdEvaluator,
     IOptions<SnmpBandwidthMonitoringOptions> options,
     ILogger<SnmpBandwidthProfilePoller> logger) : ISnmpBandwidthProfilePoller
 {
@@ -36,6 +37,7 @@ public sealed class SnmpBandwidthProfilePoller(
         var readingsByIndex = readings.ToDictionary(item => item.InterfaceIndex);
         var timestamp = DateTimeOffset.UtcNow;
         var maximumGap = TimeSpan.FromSeconds(_options.IntervalSeconds * 3L);
+        var persistedSamples = new List<InterfaceTrafficSample>();
 
         foreach (var monitoredInterface in interfaces)
         {
@@ -50,7 +52,7 @@ public sealed class SnmpBandwidthProfilePoller(
                 .OrderByDescending(item => item.Timestamp)
                 .FirstOrDefaultAsync(cancellationToken);
             var rates = InterfaceTrafficRateCalculator.Calculate(previous, reading, timestamp, maximumGap);
-            dbContext.InterfaceTrafficSamples.Add(new InterfaceTrafficSample
+            var sample = new InterfaceTrafficSample
             {
                 SnmpMonitoredInterfaceId = monitoredInterface.Id,
                 Timestamp = timestamp,
@@ -61,9 +63,26 @@ public sealed class SnmpBandwidthProfilePoller(
                 OperStatus = reading.OperStatus,
                 SysUpTimeTicks = reading.SysUpTimeTicks,
                 CounterDiscontinuityTicks = reading.CounterDiscontinuityTicks
-            });
+            };
+            dbContext.InterfaceTrafficSamples.Add(sample);
+            persistedSamples.Add(sample);
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        foreach (var sample in persistedSamples)
+        {
+            try
+            {
+                await thresholdEvaluator.EvaluateAsync(sample.SnmpMonitoredInterfaceId, sample, cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                logger.LogWarning("Bandwidth threshold evaluation failed for interface {InterfaceId} ({ErrorType}).", sample.SnmpMonitoredInterfaceId, exception.GetType().Name);
+            }
+        }
     }
 }

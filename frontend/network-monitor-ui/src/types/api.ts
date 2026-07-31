@@ -241,6 +241,28 @@ export interface InterfaceTrafficSummary {
   lastSampleAt: string | null
   inboundBitsPerSecond: number | null
   outboundBitsPerSecond: number | null
+  threshold: InterfaceBandwidthThreshold | null
+  hasOpenInboundAlert: boolean
+  hasOpenOutboundAlert: boolean
+}
+
+export interface InterfaceBandwidthThreshold {
+  interfaceIndex: number
+  inboundThresholdMbps: number | null
+  outboundThresholdMbps: number | null
+  breachSampleCount: number
+  recoverySampleCount: number
+  isEnabled: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface UpdateInterfaceBandwidthThresholdRequest {
+  inboundThresholdMbps: number | null
+  outboundThresholdMbps: number | null
+  breachSampleCount: number
+  recoverySampleCount: number
+  isEnabled: boolean
 }
 
 export interface InterfaceTrafficSample {
@@ -295,7 +317,8 @@ export interface TopologyDiscoveryResponse {
 }
 
 export type IncidentStatus = 'Open' | 'Resolved'
-export type IncidentType = 'DeviceUnreachable'
+export type IncidentType = 'DeviceUnreachable' | 'InterfaceInboundBandwidthHigh' | 'InterfaceOutboundBandwidthHigh'
+export type BandwidthDirection = 'Inbound' | 'Outbound'
 
 export interface Incident {
   id: number
@@ -305,6 +328,11 @@ export interface Incident {
   type: IncidentType
   status: IncidentStatus
   summary: string
+  interfaceIndex: number | null
+  interfaceName: string | null
+  direction: BandwidthDirection | null
+  thresholdBitsPerSecond: number | null
+  observedBitsPerSecond: number | null
   startedAt: string
   resolvedAt: string | null
   durationSeconds: number

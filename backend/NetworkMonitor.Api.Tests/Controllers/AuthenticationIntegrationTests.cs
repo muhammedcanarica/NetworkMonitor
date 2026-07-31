@@ -22,6 +22,7 @@ public sealed class AuthenticationIntegrationTests
 
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/devices")).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/devices/1/interface-traffic")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/devices/1/interfaces/1/bandwidth-threshold")).StatusCode);
         var csrf = await client.GetFromJsonAsync<CsrfResponse>("/api/security/csrf");
 
         var invalid = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login") { Content = JsonContent.Create(new { username = "admin", password = "wrong-password" }) };
@@ -38,6 +39,7 @@ public sealed class AuthenticationIntegrationTests
         Assert.Equal(HttpStatusCode.NoContent, (await client.SendAsync(logout)).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/devices")).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/devices/1/interface-traffic")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/devices/1/interfaces/1/bandwidth-threshold")).StatusCode);
     }
 
     private sealed record CsrfResponse(string Token);

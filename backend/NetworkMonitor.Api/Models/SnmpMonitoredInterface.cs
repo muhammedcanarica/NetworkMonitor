@@ -10,5 +10,6 @@ public sealed class SnmpMonitoredInterface
     public bool IsEnabled { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public SnmpMonitoringProfile Profile { get; set; } = null!;
+    public InterfaceBandwidthThreshold? BandwidthThreshold { get; set; }
     public ICollection<InterfaceTrafficSample> Samples { get; set; } = new List<InterfaceTrafficSample>();
 }

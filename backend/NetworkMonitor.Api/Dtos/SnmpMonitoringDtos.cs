@@ -45,7 +45,10 @@ public sealed record InterfaceTrafficSummaryResponse(
     string? OperStatus,
     DateTimeOffset? LastSampleAt,
     double? InboundBitsPerSecond,
-    double? OutboundBitsPerSecond);
+    double? OutboundBitsPerSecond,
+    InterfaceBandwidthThresholdResponse? Threshold,
+    bool HasOpenInboundAlert,
+    bool HasOpenOutboundAlert);
 
 public sealed record InterfaceTrafficSampleResponse(
     DateTimeOffset Timestamp,

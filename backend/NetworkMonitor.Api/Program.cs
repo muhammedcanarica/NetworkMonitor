@@ -133,6 +133,8 @@ builder.Services.AddSingleton<ISnmpTransport, SharpSnmpTransport>();
 builder.Services.AddSingleton<ISnmpService, SnmpService>();
 builder.Services.AddSingleton<ISnmpBandwidthProbe, SnmpBandwidthProbe>();
 builder.Services.AddScoped<ISnmpMonitoringConfigurationService, SnmpMonitoringConfigurationService>();
+builder.Services.AddScoped<IInterfaceBandwidthThresholdService, InterfaceBandwidthThresholdService>();
+builder.Services.AddScoped<IInterfaceBandwidthThresholdEvaluator, InterfaceBandwidthThresholdEvaluator>();
 builder.Services.AddScoped<ISnmpBandwidthProfilePoller, SnmpBandwidthProfilePoller>();
 builder.Services.AddScoped<ITopologyDiscoveryService, TopologyDiscoveryService>();
 builder.Services.AddSingleton<DeviceStatusTracker>();

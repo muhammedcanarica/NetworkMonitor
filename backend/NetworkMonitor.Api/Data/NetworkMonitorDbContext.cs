@@ -17,6 +17,7 @@ public sealed class NetworkMonitorDbContext(DbContextOptions<NetworkMonitorDbCon
     public DbSet<SnmpMonitoringProfile> SnmpMonitoringProfiles => Set<SnmpMonitoringProfile>();
     public DbSet<SnmpMonitoredInterface> SnmpMonitoredInterfaces => Set<SnmpMonitoredInterface>();
     public DbSet<InterfaceTrafficSample> InterfaceTrafficSamples => Set<InterfaceTrafficSample>();
+    public DbSet<InterfaceBandwidthThreshold> InterfaceBandwidthThresholds => Set<InterfaceBandwidthThreshold>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -121,8 +122,16 @@ public sealed class NetworkMonitorDbContext(DbContextOptions<NetworkMonitorDbCon
         incident.Property(item => item.CreatedAt).HasConversion(value => value.ToUnixTimeMilliseconds(), value => DateTimeOffset.FromUnixTimeMilliseconds(value)).IsRequired();
         incident.Property(item => item.UpdatedAt).HasConversion(value => value.ToUnixTimeMilliseconds(), value => DateTimeOffset.FromUnixTimeMilliseconds(value)).IsRequired();
         incident.HasIndex(item => new { item.DeviceId, item.Status, item.StartedAt });
-        incident.HasIndex(item => new { item.DeviceId, item.Type }).HasFilter("\"Status\" = 'Open'").IsUnique();
+        incident.HasIndex(item => new { item.DeviceId, item.Type })
+            .HasDatabaseName("IX_Incidents_OpenDeviceType")
+            .HasFilter("\"Status\" = 'Open' AND \"SnmpMonitoredInterfaceId\" IS NULL")
+            .IsUnique();
+        incident.HasIndex(item => new { item.DeviceId, item.SnmpMonitoredInterfaceId, item.Type })
+            .HasDatabaseName("IX_Incidents_OpenInterfaceType")
+            .HasFilter("\"Status\" = 'Open' AND \"SnmpMonitoredInterfaceId\" IS NOT NULL")
+            .IsUnique();
         incident.HasOne(item => item.Device).WithMany().HasForeignKey(item => item.DeviceId).OnDelete(DeleteBehavior.Cascade);
+        incident.HasOne(item => item.SnmpMonitoredInterface).WithMany().HasForeignKey(item => item.SnmpMonitoredInterfaceId).OnDelete(DeleteBehavior.SetNull);
 
         var credential = modelBuilder.Entity<NetworkCredential>();
         credential.Property(item => item.Name).IsRequired().HasMaxLength(100);
@@ -153,5 +162,14 @@ public sealed class NetworkMonitorDbContext(DbContextOptions<NetworkMonitorDbCon
         trafficSample.Property(item => item.OperStatus).IsRequired().HasMaxLength(16);
         trafficSample.HasIndex(item => new { item.SnmpMonitoredInterfaceId, item.Timestamp });
         trafficSample.HasOne(item => item.MonitoredInterface).WithMany(item => item.Samples).HasForeignKey(item => item.SnmpMonitoredInterfaceId).OnDelete(DeleteBehavior.Cascade);
+
+        var bandwidthThreshold = modelBuilder.Entity<InterfaceBandwidthThreshold>();
+        bandwidthThreshold.ToTable(table => table.HasCheckConstraint(
+            "CK_InterfaceBandwidthThresholds_AtLeastOneThreshold",
+            "\"InboundThresholdBitsPerSecond\" IS NOT NULL OR \"OutboundThresholdBitsPerSecond\" IS NOT NULL"));
+        bandwidthThreshold.Property(item => item.CreatedAt).HasConversion(value => value.ToUnixTimeMilliseconds(), value => DateTimeOffset.FromUnixTimeMilliseconds(value)).IsRequired();
+        bandwidthThreshold.Property(item => item.UpdatedAt).HasConversion(value => value.ToUnixTimeMilliseconds(), value => DateTimeOffset.FromUnixTimeMilliseconds(value)).IsRequired();
+        bandwidthThreshold.HasIndex(item => item.SnmpMonitoredInterfaceId).IsUnique();
+        bandwidthThreshold.HasOne(item => item.MonitoredInterface).WithOne(item => item.BandwidthThreshold).HasForeignKey<InterfaceBandwidthThreshold>(item => item.SnmpMonitoredInterfaceId).OnDelete(DeleteBehavior.Cascade);
     }
 }

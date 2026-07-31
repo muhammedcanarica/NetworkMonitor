@@ -43,11 +43,22 @@ public sealed class IncidentsController(NetworkMonitorDbContext dbContext) : Con
 
     private IQueryable<Incident> BuildQuery()
     {
-        return dbContext.Incidents.AsNoTracking().Include(item => item.Device);
+        return dbContext.Incidents.AsNoTracking().Include(item => item.Device).Include(item => item.SnmpMonitoredInterface);
     }
 
     private static IncidentResponse ToResponse(Incident item, DateTimeOffset now) => new(
         item.Id, item.DeviceId, item.Device.Name, item.Device.IpAddress, item.Type, item.Status,
-        item.Summary, item.StartedAt, item.ResolvedAt,
+        item.Summary,
+        item.SnmpMonitoredInterface?.InterfaceIndex,
+        item.SnmpMonitoredInterface?.InterfaceName,
+        item.Type switch
+        {
+            IncidentType.InterfaceInboundBandwidthHigh => BandwidthDirection.Inbound,
+            IncidentType.InterfaceOutboundBandwidthHigh => BandwidthDirection.Outbound,
+            _ => null
+        },
+        item.ThresholdBitsPerSecond,
+        item.ObservedBitsPerSecond,
+        item.StartedAt, item.ResolvedAt,
         (long)Math.Max(0, ((item.ResolvedAt ?? now) - item.StartedAt).TotalSeconds));
 }

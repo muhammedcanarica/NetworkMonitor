@@ -493,6 +493,13 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
 .protocol-badge.muted { color: var(--text-muted); border-color: #334155; background: #111827; }
 .bandwidth-panel tbody tr { cursor: pointer; }.bandwidth-panel tbody tr.selected-row { background: rgba(48,199,215,.08); }
 .bandwidth-chart-section { border-top: 1px solid var(--border); }.bandwidth-chart-header { justify-content: space-between; padding: 14px 18px 0; }
+.bandwidth-active-alert { display: inline-flex; align-items: center; gap: 5px; color: #fb7185; font-size: 11px; font-weight: 750; }
+.bandwidth-alert-form { display: grid; gap: 14px; padding: 18px; border-top: 1px solid var(--border); background: rgba(9,19,31,.55); }
+.bandwidth-alert-heading { display: flex; align-items: center; justify-content: space-between; }.bandwidth-alert-heading > div { display: flex; flex-direction: column; gap: 3px; }.bandwidth-alert-heading small { color: var(--text-muted); }
+.bandwidth-alert-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)) auto; align-items: end; gap: 10px; }
+.bandwidth-alert-grid label { display: flex; flex-direction: column; gap: 6px; color: #9dacbf; font-size: 10px; font-weight: 700; }
+.bandwidth-alert-grid input[type="number"] { height: 38px; padding: 0 10px; color: var(--text-strong); border: 1px solid #273950; border-radius: 7px; background: #09131f; }
+.bandwidth-alert-grid .bandwidth-alert-toggle { min-height: 38px; flex-direction: row; align-items: center; }
 .device-security-copy { display: flex; align-items: center; gap: 7px; padding: 0 18px 14px; color: #718399; font-size: 10px; }
 .device-security-copy svg { color: var(--cyan); }
 .device-snmp-info { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--border); }
@@ -576,6 +583,7 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
   .device-snmp-form { align-items: stretch; flex-direction: column; }
   .bandwidth-interface-picker { grid-template-columns: 1fr; }
   .bandwidth-toolbar, .bandwidth-chart-header { align-items: stretch; flex-direction: column; }
+  .bandwidth-alert-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .credential-create-panel form { grid-template-columns: 1fr; }
   .wol-form { grid-template-columns: 1fr; }
   .port-scan-form { grid-template-columns: 1fr; }
@@ -601,6 +609,7 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
   .state-panel { flex-direction: column; text-align: center; }
   .state-panel .button { margin: 6px 0 0; }
   .chart-container { height: 270px; }
+  .bandwidth-alert-grid { grid-template-columns: 1fr; }
   .scanner-input-row { align-items: stretch; flex-direction: column; }
   .scanner-input-row input { width: 100%; }
   .snmp-connection-grid { grid-template-columns: 1fr; }

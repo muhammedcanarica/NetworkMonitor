@@ -1,5 +1,6 @@
 import {
   Activity,
+  BellRing,
   Cable,
   DatabaseBackup,
   LayoutDashboard,
@@ -39,6 +40,10 @@ export function AppLayout() {
           <NavLink to="/topology">
             <Share2 size={18} aria-hidden="true" />
             Topology
+          </NavLink>
+          <NavLink to="/incidents">
+            <BellRing size={18} aria-hidden="true" />
+            Incidents
           </NavLink>
 
           <span className="nav-section-label tools-label">Tools</span>

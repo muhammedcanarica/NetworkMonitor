@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react'
-import { Activity, AlertTriangle, CircleX, Server } from 'lucide-react'
+import { Activity, AlertTriangle, BellRing, CircleX, Server } from 'lucide-react'
 import { devicesApi } from '../api/devices'
+import { incidentsApi } from '../api/incidents'
 import { DeviceTable } from '../components/devices/DeviceTable'
 import { ConnectionIndicator } from '../components/realtime/ConnectionIndicator'
 import { MetricCard } from '../components/ui/MetricCard'
@@ -22,6 +23,9 @@ export function OverviewPage() {
     isRefreshing,
     refresh,
   } = useRealtimeResource(loadDevices)
+  const { data: openIncidents, refresh: refreshOpenIncidents } = useRealtimeResource(
+    useCallback((signal: AbortSignal) => incidentsApi.list('Open', signal), []),
+  )
 
   const applyMonitoringUpdate = useCallback((update: DeviceMonitoringUpdate) => {
     setDevices((currentDevices) =>
@@ -38,7 +42,8 @@ export function OverviewPage() {
           : device,
       ) ?? null,
     )
-  }, [setDevices])
+    refreshOpenIncidents()
+  }, [refreshOpenIncidents, setDevices])
   useMonitoringUpdates(applyMonitoringUpdate)
 
   const counts = useMemo(() => ({
@@ -64,6 +69,7 @@ export function OverviewPage() {
         <MetricCard label="Up" value={counts.up} hint="Responding normally" icon={Activity} tone="up" />
         <MetricCard label="Warning" value={counts.warning} hint="Needs attention" icon={AlertTriangle} tone="warning" />
         <MetricCard label="Down" value={counts.down} hint="Not responding" icon={CircleX} tone="down" />
+        <MetricCard label="Active incidents" value={openIncidents?.length ?? 0} hint="Confirmed outages" icon={BellRing} tone={openIncidents?.length ? 'down' : 'up'} />
       </section>
 
       <section className="panel">

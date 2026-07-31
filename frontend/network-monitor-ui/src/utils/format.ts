@@ -39,3 +39,10 @@ export function formatRelativeTime(value: string | null) {
 export function formatPercentage(value: number) {
   return `${value.toFixed(1)}%`
 }
+
+export function formatDuration(totalSeconds: number) {
+  if (totalSeconds < 60) return `${totalSeconds}s`
+  if (totalSeconds < 3600) return `${Math.floor(totalSeconds / 60)}m`
+  if (totalSeconds < 86400) return `${Math.floor(totalSeconds / 3600)}h ${Math.floor((totalSeconds % 3600) / 60)}m`
+  return `${Math.floor(totalSeconds / 86400)}d ${Math.floor((totalSeconds % 86400) / 3600)}h`
+}

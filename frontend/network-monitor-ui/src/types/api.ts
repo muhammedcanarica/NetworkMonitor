@@ -241,3 +241,19 @@ export interface TopologyDiscoveryResponse {
   durationMs: number
   warnings: string[]
 }
+
+export type IncidentStatus = 'Open' | 'Resolved'
+export type IncidentType = 'DeviceUnreachable'
+
+export interface Incident {
+  id: number
+  deviceId: number
+  deviceName: string
+  deviceIpAddress: string
+  type: IncidentType
+  status: IncidentStatus
+  summary: string
+  startedAt: string
+  resolvedAt: string | null
+  durationSeconds: number
+}

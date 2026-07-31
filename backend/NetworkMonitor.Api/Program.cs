@@ -84,6 +84,7 @@ builder.Services.AddSingleton<ISshCommandTransport, SshCommandTransport>();
 builder.Services.AddSingleton<IConfigBackupService, ConfigBackupService>();
 builder.Services.AddSingleton<IConfigDiffService, ConfigDiffService>();
 builder.Services.AddScoped<IConfigBackupStorageService, ConfigBackupStorageService>();
+builder.Services.AddScoped<IIncidentService, IncidentService>();
 builder.Services.AddSingleton<IWakeOnLanPacketSender, UdpWakeOnLanPacketSender>();
 builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
 builder.Services.AddSingleton<ISnmpTransport, SharpSnmpTransport>();

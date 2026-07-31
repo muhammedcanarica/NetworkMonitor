@@ -338,6 +338,23 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
 .topology-node-ip { fill: #83a0b6; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 9px; text-anchor: middle; }
 .topology-node-tag { fill: #b0bcc7; font-size: 7px; font-weight: 800; letter-spacing: 0.07em; text-anchor: middle; }
 
+.incidents-table { min-width: 860px; }
+.incident-open-row { background: rgba(241, 111, 122, 0.045); }
+.incident-device-link { display: flex; flex-direction: column; gap: 3px; color: #c5d6e5; font-weight: 650; text-decoration: none; }
+.incident-device-link:hover { color: var(--cyan); }
+.incident-device-link small { color: #65778e; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; font-weight: 400; }
+.incident-status { display: inline-flex; padding: 4px 7px; border: 1px solid; border-radius: 5px; font-size: 9px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; }
+.incident-status.open { color: #ff9ea6; border-color: rgba(241, 111, 122, 0.35); background: rgba(241, 111, 122, 0.11); }
+.incident-status.resolved { color: #77ddb8; border-color: rgba(64, 211, 156, 0.28); background: rgba(64, 211, 156, 0.08); }
+.device-incidents-panel > .panel-header > span svg { color: var(--amber); }
+.device-incident-empty { padding: 19px 21px; color: #718399; font-size: 11px; }
+.device-incident-list { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.device-incident { display: flex; min-height: 81px; flex-direction: column; justify-content: center; gap: 8px; padding: 15px 17px; border-right: 1px solid var(--border); }
+.device-incident:last-child { border-right: 0; }
+.device-incident.open { background: rgba(241, 111, 122, 0.05); }
+.device-incident strong { display: block; overflow: hidden; color: #b5c5d4; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.device-incident small { display: block; margin-top: 4px; color: #697b91; font-size: 10px; }
+
 .protocol-badge { padding: 5px 8px; color: var(--green); border: 1px solid rgba(64, 211, 156, 0.22); border-radius: 6px; background: rgba(64, 211, 156, 0.06); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 9px; font-weight: 750; letter-spacing: 0.06em; }
 .snmp-connection-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; padding: 21px; }
 .snmp-connection-grid label,
@@ -473,6 +490,8 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
   .config-compare-form { grid-template-columns: 1fr 1fr; }
   .config-compare-form .button { grid-column: 1 / -1; }
   .topology-device-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .device-incident-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .device-incident { border-bottom: 1px solid var(--border); }
 }
 
 @media (max-width: 800px) {
@@ -529,4 +548,7 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
   .topology-controls,
   .topology-device-picker { grid-template-columns: 1fr; }
   .topology-graph { min-height: 330px; }
+  .device-incident-list { grid-template-columns: 1fr; }
+  .device-incident { min-height: 70px; border-right: 0; }
+  .device-incident:last-child { border-bottom: 0; }
 }

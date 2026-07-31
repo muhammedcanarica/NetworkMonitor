@@ -11,6 +11,7 @@ public sealed class NetworkMonitorDbContext(DbContextOptions<NetworkMonitorDbCon
     public DbSet<CheckResult> CheckResults => Set<CheckResult>();
 
     public DbSet<ConfigBackup> ConfigBackups => Set<ConfigBackup>();
+    public DbSet<Incident> Incidents => Set<Incident>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -104,5 +105,17 @@ public sealed class NetworkMonitorDbContext(DbContextOptions<NetworkMonitorDbCon
             .WithMany()
             .HasForeignKey(item => item.DeviceId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        var incident = modelBuilder.Entity<Incident>();
+        incident.Property(item => item.Status).HasConversion<string>().HasMaxLength(16).IsRequired();
+        incident.Property(item => item.Type).HasConversion<string>().HasMaxLength(32).IsRequired();
+        incident.Property(item => item.Summary).IsRequired().HasMaxLength(200);
+        incident.Property(item => item.StartedAt).HasConversion(value => value.ToUnixTimeMilliseconds(), value => DateTimeOffset.FromUnixTimeMilliseconds(value)).IsRequired();
+        incident.Property(item => item.ResolvedAt).HasConversion(value => value.HasValue ? value.Value.ToUnixTimeMilliseconds() : (long?)null, value => value.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(value.Value) : null);
+        incident.Property(item => item.CreatedAt).HasConversion(value => value.ToUnixTimeMilliseconds(), value => DateTimeOffset.FromUnixTimeMilliseconds(value)).IsRequired();
+        incident.Property(item => item.UpdatedAt).HasConversion(value => value.ToUnixTimeMilliseconds(), value => DateTimeOffset.FromUnixTimeMilliseconds(value)).IsRequired();
+        incident.HasIndex(item => new { item.DeviceId, item.Status, item.StartedAt });
+        incident.HasIndex(item => new { item.DeviceId, item.Type }).HasFilter("\"Status\" = 'Open'").IsUnique();
+        incident.HasOne(item => item.Device).WithMany().HasForeignKey(item => item.DeviceId).OnDelete(DeleteBehavior.Cascade);
     }
 }

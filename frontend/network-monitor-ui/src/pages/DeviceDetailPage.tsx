@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   ArrowUpToLine,
   Cable,
+  BellRing,
   Clock3,
   DatabaseBackup,
   Gauge,
@@ -24,6 +25,7 @@ import {
   YAxis,
 } from 'recharts'
 import { devicesApi } from '../api/devices'
+import { incidentsApi } from '../api/incidents'
 import { ConnectionIndicator } from '../components/realtime/ConnectionIndicator'
 import { MetricCard } from '../components/ui/MetricCard'
 import { StatePanel } from '../components/ui/StatePanel'
@@ -35,9 +37,11 @@ import type {
   Device,
   DeviceMonitoringUpdate,
   DeviceSummary,
+  Incident,
 } from '../types/api'
 import {
   formatLatency,
+  formatDuration,
   formatLocalDateTime,
   formatPercentage,
   formatRelativeTime,
@@ -48,6 +52,7 @@ interface DetailData {
   device: Device
   summary: DeviceSummary
   checks: CheckResult[]
+  incidents: Incident[]
 }
 
 interface ChartPoint {
@@ -63,12 +68,13 @@ export function DeviceDetailPage() {
 
   const loadDetail = useCallback(async (signal: AbortSignal): Promise<DetailData> => {
     if (!isValidId) throw new Error('Geçersiz cihaz kimliği.')
-    const [device, summary, checks] = await Promise.all([
+    const [device, summary, checks, incidents] = await Promise.all([
       devicesApi.get(deviceId, signal),
       devicesApi.summary(deviceId, signal),
       devicesApi.checks(deviceId, 100, signal),
+      incidentsApi.byDevice(deviceId, signal),
     ])
-    return { device, summary, checks }
+    return { device, summary, checks, incidents }
   }, [deviceId, isValidId])
 
   const {
@@ -147,7 +153,7 @@ export function DeviceDetailPage() {
 
   if (!data) return null
 
-  const { device, summary, checks } = data
+  const { device, summary, checks, incidents } = data
 
   return (
     <div className="page">
@@ -209,6 +215,23 @@ export function DeviceDetailPage() {
             <span><strong>Config Backup</strong><small>Retrieve running configuration</small></span>
           </Link>
         </div>
+      </section>
+
+      <section className="panel device-incidents-panel">
+        <header className="panel-header">
+          <div><h2>Incidents</h2><p>Latest confirmed monitoring outages for this device.</p></div>
+          <span className="device-tools-header-action"><Link className="button secondary compact-button" to="/incidents">All incidents</Link><BellRing size={19} aria-hidden="true" /></span>
+        </header>
+        {incidents.length === 0 ? (
+          <div className="device-incident-empty">No incidents recorded for this device.</div>
+        ) : (
+          <div className="device-incident-list">{incidents.slice(0, 5).map((incident) => (
+            <div key={incident.id} className={`device-incident ${incident.status === 'Open' ? 'open' : ''}`}>
+              <span className={`incident-status ${incident.status.toLowerCase()}`}>{incident.status}</span>
+              <div><strong>{incident.summary}</strong><small>{incident.status === 'Open' ? `Started ${formatRelativeTime(incident.startedAt)}` : `Resolved · ${formatDuration(incident.durationSeconds)}`}</small></div>
+            </div>
+          ))}</div>
+        )}
       </section>
 
       <section className="metrics-grid detail-metrics" aria-label="24 hour monitoring summary">

@@ -90,6 +90,7 @@ public sealed class DeviceMonitoringService(
             .ToDictionaryAsync(device => device.Id, cancellationToken);
 
         var updates = new List<DeviceMonitoringUpdate>();
+        var transitions = new List<StatusTransition>();
         foreach (var outcome in outcomes)
         {
             if (!devices.TryGetValue(outcome.Target.DeviceId, out var device)
@@ -98,11 +99,37 @@ public sealed class DeviceMonitoringService(
                 continue;
             }
 
+            var previousStatus = device.Status;
             dbContext.CheckResults.Add(ApplyOutcome(device, outcome));
+            if (previousStatus != device.Status)
+            {
+                transitions.Add(new StatusTransition(device.Id, previousStatus, device.Status));
+            }
             updates.Add(DeviceMonitoringUpdate.FromDevice(device));
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        var incidentService = scope.ServiceProvider.GetRequiredService<IIncidentService>();
+        foreach (var transition in transitions)
+        {
+            try
+            {
+                await incidentService.HandleStatusTransitionAsync(
+                    transition.DeviceId,
+                    transition.PreviousStatus,
+                    transition.CurrentStatus,
+                    cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(exception, "Could not persist incident transition for device {DeviceId}.", transition.DeviceId);
+            }
+        }
 
         foreach (var update in updates)
         {
@@ -197,4 +224,6 @@ public sealed class DeviceMonitoringService(
         MonitoringTarget Target,
         PingCheckResult Result,
         DateTimeOffset CheckedAt);
+
+    private sealed record StatusTransition(int DeviceId, DeviceStatus PreviousStatus, DeviceStatus CurrentStatus);
 }

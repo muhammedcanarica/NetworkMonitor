@@ -88,7 +88,7 @@ public sealed class InterfaceBandwidthThresholdEvaluatorTests
     };
 
     private static IncidentNotificationPublisher CreatePublisher(TestDatabase database)
-        => new(new NotificationService(database.Context), NullLogger<IncidentNotificationPublisher>.Instance);
+        => new(new NotificationService(database.Context), new StubNotificationDeliveryPlanner(), NullLogger<IncidentNotificationPublisher>.Instance);
 
     private static async Task<SnmpMonitoredInterface> AddMonitoredInterface(TestDatabase database, int breachCount, int recoveryCount)
     {

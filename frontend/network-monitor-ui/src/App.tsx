@@ -19,6 +19,7 @@ import { LoginPage } from './pages/LoginPage'
 import { CredentialsPage } from './pages/CredentialsPage'
 import { NotificationsPage } from './pages/NotificationsPage'
 import { NotificationProvider } from './notifications/NotificationProvider'
+import { EmailNotificationSettingsPage } from './pages/EmailNotificationSettingsPage'
 
 const DeviceDetailPage = lazy(() =>
   import('./pages/DeviceDetailPage').then((module) => ({
@@ -38,6 +39,7 @@ function App() {
             <Route path="incidents" element={<IncidentsPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="settings/credentials" element={<CredentialsPage />} />
+            <Route path="settings/notifications" element={<EmailNotificationSettingsPage />} />
             <Route path="tools/ip-scanner" element={<IpScannerPage />} />
             <Route path="tools/config-backup" element={<ConfigBackupPage />} />
             <Route path="tools/config-backup/history" element={<ConfigBackupHistoryPage />} />

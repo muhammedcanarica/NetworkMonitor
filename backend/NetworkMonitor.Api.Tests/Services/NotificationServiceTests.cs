@@ -104,6 +104,7 @@ public sealed class NotificationServiceTests
         var device = await database.AddDeviceAsync();
         var publisher = new IncidentNotificationPublisher(
             new ThrowingNotificationService(),
+            new StubNotificationDeliveryPlanner(),
             NullLogger<IncidentNotificationPublisher>.Instance);
 
         await new IncidentService(database.Context, publisher)

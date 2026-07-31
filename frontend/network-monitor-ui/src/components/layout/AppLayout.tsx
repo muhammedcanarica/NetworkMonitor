@@ -11,6 +11,7 @@ import {
   Share2,
   KeyRound,
   LogOut,
+  Mail,
 } from 'lucide-react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { ConnectionIndicator } from '../realtime/ConnectionIndicator'
@@ -75,6 +76,7 @@ export function AppLayout() {
           </NavLink>
           <span className="nav-section-label tools-label">Settings</span>
           <NavLink to="/settings/credentials"><KeyRound size={18} aria-hidden="true" />Credentials</NavLink>
+          <NavLink to="/settings/notifications"><Mail size={18} aria-hidden="true" />Email Notifications</NavLink>
         </nav>
 
         <div className="sidebar-footer">

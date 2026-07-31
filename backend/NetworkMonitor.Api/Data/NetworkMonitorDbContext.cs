@@ -14,6 +14,8 @@ public sealed class NetworkMonitorDbContext(DbContextOptions<NetworkMonitorDbCon
     public DbSet<ConfigBackup> ConfigBackups => Set<ConfigBackup>();
     public DbSet<Incident> Incidents => Set<Incident>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<EmailNotificationSettings> EmailNotificationSettings => Set<EmailNotificationSettings>();
+    public DbSet<NotificationDeliveryAttempt> NotificationDeliveryAttempts => Set<NotificationDeliveryAttempt>();
     public DbSet<NetworkCredential> NetworkCredentials => Set<NetworkCredential>();
     public DbSet<SnmpMonitoringProfile> SnmpMonitoringProfiles => Set<SnmpMonitoringProfile>();
     public DbSet<SnmpMonitoredInterface> SnmpMonitoredInterfaces => Set<SnmpMonitoredInterface>();
@@ -145,6 +147,29 @@ public sealed class NetworkMonitorDbContext(DbContextOptions<NetworkMonitorDbCon
         notification.HasIndex(item => new { item.IncidentId, item.Type }).IsUnique();
         notification.HasOne(item => item.Incident).WithMany().HasForeignKey(item => item.IncidentId).OnDelete(DeleteBehavior.SetNull);
         notification.HasOne(item => item.Device).WithMany().HasForeignKey(item => item.DeviceId).OnDelete(DeleteBehavior.SetNull);
+
+        var emailSettings = modelBuilder.Entity<EmailNotificationSettings>();
+        emailSettings.Property(item => item.Host).IsRequired().HasMaxLength(255);
+        emailSettings.Property(item => item.TlsMode).HasConversion<string>().HasMaxLength(24).IsRequired();
+        emailSettings.Property(item => item.Username).HasMaxLength(255);
+        emailSettings.Property(item => item.FromAddress).IsRequired().HasMaxLength(320);
+        emailSettings.Property(item => item.FromName).HasMaxLength(100);
+        emailSettings.Property(item => item.RecipientAddresses).IsRequired().HasMaxLength(4000);
+        emailSettings.Property(item => item.CreatedAt).HasConversion(value => value.ToUnixTimeMilliseconds(), value => DateTimeOffset.FromUnixTimeMilliseconds(value)).IsRequired();
+        emailSettings.Property(item => item.UpdatedAt).HasConversion(value => value.ToUnixTimeMilliseconds(), value => DateTimeOffset.FromUnixTimeMilliseconds(value)).IsRequired();
+
+        var deliveryAttempt = modelBuilder.Entity<NotificationDeliveryAttempt>();
+        deliveryAttempt.Property(item => item.Channel).HasConversion<string>().HasMaxLength(16).IsRequired();
+        deliveryAttempt.Property(item => item.Status).HasConversion<string>().HasMaxLength(16).IsRequired();
+        deliveryAttempt.Property(item => item.LastErrorCode).HasConversion<string>().HasMaxLength(32);
+        deliveryAttempt.Property(item => item.LastAttemptAt).HasConversion(value => value.HasValue ? value.Value.ToUnixTimeMilliseconds() : (long?)null, value => value.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(value.Value) : null);
+        deliveryAttempt.Property(item => item.SentAt).HasConversion(value => value.HasValue ? value.Value.ToUnixTimeMilliseconds() : (long?)null, value => value.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(value.Value) : null);
+        deliveryAttempt.Property(item => item.NextAttemptAt).HasConversion(value => value.HasValue ? value.Value.ToUnixTimeMilliseconds() : (long?)null, value => value.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(value.Value) : null);
+        deliveryAttempt.Property(item => item.CreatedAt).HasConversion(value => value.ToUnixTimeMilliseconds(), value => DateTimeOffset.FromUnixTimeMilliseconds(value)).IsRequired();
+        deliveryAttempt.Property(item => item.UpdatedAt).HasConversion(value => value.ToUnixTimeMilliseconds(), value => DateTimeOffset.FromUnixTimeMilliseconds(value)).IsRequired();
+        deliveryAttempt.HasIndex(item => new { item.NotificationId, item.Channel }).IsUnique();
+        deliveryAttempt.HasIndex(item => new { item.Status, item.NextAttemptAt });
+        deliveryAttempt.HasOne(item => item.Notification).WithMany().HasForeignKey(item => item.NotificationId).OnDelete(DeleteBehavior.Cascade);
 
         var credential = modelBuilder.Entity<NetworkCredential>();
         credential.Property(item => item.Name).IsRequired().HasMaxLength(100);

@@ -144,7 +144,7 @@ public sealed class InterfaceStatusIncidentEvaluatorTests
         }));
 
     private static IncidentNotificationPublisher CreatePublisher(TestDatabase database)
-        => new(new NotificationService(database.Context), NullLogger<IncidentNotificationPublisher>.Instance);
+        => new(new NotificationService(database.Context), new StubNotificationDeliveryPlanner(), NullLogger<IncidentNotificationPublisher>.Instance);
 
     private static DateTimeOffset Timestamp(int minute)
         => new(2026, 7, 31, 9, minute, 0, TimeSpan.Zero);

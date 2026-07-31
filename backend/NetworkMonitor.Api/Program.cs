@@ -99,6 +99,13 @@ builder.Services
     .Validate(options => options.InterfaceUpRecoverySamples is >= 1 and <= 20, "Interface up recovery samples must be between 1 and 20.")
     .ValidateOnStart();
 builder.Services
+    .AddOptions<EmailNotificationDeliveryOptions>()
+    .Bind(builder.Configuration.GetSection(EmailNotificationDeliveryOptions.SectionName))
+    .Validate(options => options.PollIntervalSeconds > 0, "Email delivery poll interval must be greater than zero.")
+    .Validate(options => options.BatchSize is >= 1 and <= 100, "Email delivery batch size must be between 1 and 100.")
+    .Validate(options => options.MaxAttempts is >= 1 and <= 10, "Email delivery max attempts must be between 1 and 10.")
+    .ValidateOnStart();
+builder.Services
     .AddControllers()
     .AddJsonOptions(options =>
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -128,6 +135,10 @@ builder.Services.AddScoped<IConfigBackupStorageService, ConfigBackupStorageServi
 builder.Services.AddScoped<IIncidentService, IncidentService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IIncidentNotificationPublisher, IncidentNotificationPublisher>();
+builder.Services.AddScoped<INotificationDeliveryPlanner, NotificationDeliveryPlanner>();
+builder.Services.AddScoped<IEmailNotificationSettingsService, EmailNotificationSettingsService>();
+builder.Services.AddSingleton<IEmailSenderTransport, MailKitEmailSenderTransport>();
+builder.Services.AddScoped<IEmailNotificationDeliveryProcessor, EmailNotificationDeliveryProcessor>();
 builder.Services.AddSingleton<ISecretProtector, DataProtectionSecretProtector>();
 builder.Services.AddScoped<INetworkCredentialService, NetworkCredentialService>();
 builder.Services.AddScoped<INetworkOperationCredentialResolver, NetworkOperationCredentialResolver>();
@@ -146,6 +157,7 @@ builder.Services.AddSingleton<DeviceStatusTracker>();
 builder.Services.AddSingleton<IMonitoringUpdatePublisher, SignalRMonitoringUpdatePublisher>();
 builder.Services.AddHostedService<DeviceMonitoringService>();
 builder.Services.AddHostedService<SnmpBandwidthMonitoringService>();
+builder.Services.AddHostedService<EmailNotificationDeliveryService>();
 
 var app = builder.Build();
 await AdminBootstrapper.BootstrapAsync(app.Services);

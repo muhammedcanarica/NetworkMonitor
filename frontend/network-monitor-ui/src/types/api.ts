@@ -356,6 +356,33 @@ export interface Notification {
 
 export interface NotificationUnreadCount { count: number }
 
+export type EmailTlsMode = 'None' | 'StartTls' | 'SslOnConnect'
+
+export interface EmailNotificationSettings {
+  isEnabled: boolean
+  host: string
+  port: number
+  tlsMode: EmailTlsMode
+  username: string | null
+  fromAddress: string
+  fromName: string | null
+  recipientAddresses: string[]
+  hasPassword: boolean
+  updatedAt: string | null
+}
+
+export interface UpdateEmailNotificationSettingsRequest {
+  isEnabled: boolean
+  host: string
+  port: number
+  tlsMode: EmailTlsMode
+  username: string | null
+  password: string | null
+  fromAddress: string
+  fromName: string | null
+  recipientAddresses: string[]
+}
+
 export interface CurrentUser { username: string }
 export type NetworkCredentialType = 'SnmpV2Community' | 'SshPassword'
 export interface NetworkCredential { id: number; name: string; type: NetworkCredentialType; username: string | null; deviceId: number | null; createdAt: string; updatedAt: string; hasSecret: boolean }

@@ -91,5 +91,5 @@ public sealed class IncidentServiceTests
     }
 
     private static IncidentNotificationPublisher CreatePublisher(TestDatabase database)
-        => new(new NotificationService(database.Context), NullLogger<IncidentNotificationPublisher>.Instance);
+        => new(new NotificationService(database.Context), new StubNotificationDeliveryPlanner(), NullLogger<IncidentNotificationPublisher>.Instance);
 }

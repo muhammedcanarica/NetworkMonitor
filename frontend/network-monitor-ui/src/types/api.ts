@@ -70,6 +70,42 @@ export interface IpScanResponse {
   results: IpScanHost[]
 }
 
+export interface WakeOnLanRequest {
+  macAddress: string
+  broadcastAddress: string
+  port: number
+}
+
+export interface WakeOnLanResponse {
+  macAddress: string
+  broadcastAddress: string
+  port: number
+  message: string
+}
+
+export type PortState = 'Open' | 'Closed'
+
+export interface PortScanRequest {
+  ipAddress: string
+  ports: number[]
+  timeoutMilliseconds: number
+}
+
+export interface PortScanResult {
+  port: number
+  state: PortState
+  latencyMs: number | null
+  serviceName: string | null
+}
+
+export interface PortScanResponse {
+  ipAddress: string
+  scannedPorts: number
+  openPorts: number
+  durationMs: number
+  results: PortScanResult[]
+}
+
 export interface SnmpConnectionRequest {
   ipAddress: string
   community: string

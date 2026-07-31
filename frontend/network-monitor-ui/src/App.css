@@ -221,6 +221,45 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
 .scanner-monitor-state { display: inline-flex; align-items: center; gap: 6px; color: #6f8095; font-size: 10px; font-weight: 650; }
 .scanner-monitor-state.monitored { color: var(--green); }
 
+.wol-control-panel > .panel-header > svg { color: var(--cyan); }
+.wol-form { display: grid; grid-template-columns: minmax(220px, 1.2fr) minmax(220px, 1fr) minmax(120px, 0.45fr) auto; align-items: end; gap: 14px; padding: 21px; }
+.wol-form label { display: flex; flex-direction: column; gap: 7px; color: #9dacbf; font-size: 11px; font-weight: 650; }
+.wol-form input { width: 100%; height: 40px; padding: 0 11px; color: var(--text-strong); border: 1px solid #273950; outline: none; border-radius: 8px; background: #09131f; font-size: 12px; }
+.wol-form input:focus { border-color: rgba(48, 199, 215, 0.65); box-shadow: 0 0 0 3px rgba(48, 199, 215, 0.08); }
+.wol-form input::placeholder { color: #42536a; }
+.wol-form label:first-child input { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.wol-submit { display: flex; min-height: 40px; align-items: flex-end; }
+.wol-submit .button { width: 100%; white-space: nowrap; }
+.wol-security-note { display: flex; align-items: flex-start; gap: 10px; padding: 14px 21px; color: #76879d; border-top: 1px solid var(--border); background: rgba(48, 199, 215, 0.035); font-size: 11px; line-height: 1.5; }
+.wol-security-note svg { flex: 0 0 auto; color: var(--cyan); }
+.wol-security-note strong { color: #9fb1c5; }
+
+.port-scan-control-panel > .panel-header > svg { color: var(--cyan); }
+.port-scan-form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: end; gap: 14px; padding: 21px; }
+.port-scan-form label { display: flex; flex-direction: column; gap: 7px; color: #9dacbf; font-size: 11px; font-weight: 650; }
+.port-scan-form input,
+.port-scan-form select { width: 100%; height: 40px; padding: 0 11px; color: var(--text-strong); border: 1px solid #273950; outline: none; border-radius: 8px; background: #09131f; font-size: 12px; }
+.port-scan-form input:focus,
+.port-scan-form select:focus { border-color: rgba(48, 199, 215, 0.65); box-shadow: 0 0 0 3px rgba(48, 199, 215, 0.08); }
+.port-scan-form input::placeholder { color: #42536a; }
+.port-scan-form select { color-scheme: dark; }
+.port-list-field { grid-column: span 3; }
+.port-list-field small { color: #5e7087; font-size: 10px; font-weight: 400; }
+.port-scan-submit { display: flex; min-height: 40px; align-items: flex-end; }
+.port-scan-submit .button { width: 100%; white-space: nowrap; }
+.port-scan-security-note { display: flex; align-items: flex-start; gap: 10px; padding: 14px 21px; color: #76879d; border-top: 1px solid var(--border); background: rgba(48, 199, 215, 0.035); font-size: 11px; line-height: 1.5; }
+.port-scan-security-note svg { flex: 0 0 auto; color: var(--cyan); }
+.port-scan-security-note strong { color: #9fb1c5; }
+.port-result-filters { display: flex; gap: 6px; padding: 12px 17px; border-bottom: 1px solid var(--border); background: rgba(4, 12, 21, 0.18); }
+.port-result-filters button { min-width: 62px; min-height: 30px; color: #74849a; border: 1px solid transparent; border-radius: 7px; background: transparent; font-size: 10px; font-weight: 700; }
+.port-result-filters button:hover { color: var(--text-strong); }
+.port-result-filters button.active { color: #dffcff; border-color: rgba(48, 199, 215, 0.18); background: var(--cyan-soft); }
+.port-state { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; }
+.port-state.open { color: var(--green); }
+.port-state.closed { color: #7f8da0; }
+.port-scan-table { min-width: 620px; }
+.port-scan-table td:first-child { min-width: 100px; }
+
 .protocol-badge { padding: 5px 8px; color: var(--green); border: 1px solid rgba(64, 211, 156, 0.22); border-radius: 6px; background: rgba(64, 211, 156, 0.06); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 9px; font-weight: 750; letter-spacing: 0.06em; }
 .snmp-connection-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; padding: 21px; }
 .snmp-connection-grid label,
@@ -336,6 +375,9 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
   .device-info-grid > div:nth-child(even) { border-right: 0; }
   .device-info-grid > div:last-child { grid-column: 1 / -1; border-right: 0; border-bottom: 0; }
   .snmp-connection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wol-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .port-scan-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .port-list-field { grid-column: span 2; }
 }
 
 @media (max-width: 800px) {
@@ -355,6 +397,9 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
   .snmp-info-grid > div { border-right: 0; border-bottom: 1px solid var(--border) !important; }
   .snmp-info-grid > div:last-child { border-bottom: 0 !important; }
   .snmp-query-form { grid-template-columns: 1fr; align-items: stretch; }
+  .wol-form { grid-template-columns: 1fr; }
+  .port-scan-form { grid-template-columns: 1fr; }
+  .port-list-field { grid-column: auto; }
 }
 
 @media (max-width: 560px) {

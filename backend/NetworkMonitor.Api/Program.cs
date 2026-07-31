@@ -34,6 +34,16 @@ builder.Services
     .Validate(options => options.HostNameTimeoutMilliseconds > 0, "IP scanner host name timeout must be greater than zero.")
     .ValidateOnStart();
 builder.Services
+    .AddOptions<PortScannerOptions>()
+    .Bind(builder.Configuration.GetSection(PortScannerOptions.SectionName))
+    .Validate(options => options.MaxPortsPerScan > 0, "Port scanner port limit must be greater than zero.")
+    .Validate(options => options.MaxConcurrentConnections > 0, "Port scanner concurrency must be greater than zero.")
+    .Validate(options => options.MinimumTimeoutMilliseconds > 0, "Port scanner minimum timeout must be greater than zero.")
+    .Validate(
+        options => options.MaximumTimeoutMilliseconds >= options.MinimumTimeoutMilliseconds,
+        "Port scanner maximum timeout must be greater than or equal to the minimum timeout.")
+    .ValidateOnStart();
+builder.Services
     .AddControllers()
     .AddJsonOptions(options =>
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -54,6 +64,10 @@ if (frontendOrigins.Length > 0)
 builder.Services.AddSingleton<IPingService, PingService>();
 builder.Services.AddSingleton<IHostNameResolver, HostNameResolver>();
 builder.Services.AddScoped<IIpScannerService, IpScannerService>();
+builder.Services.AddSingleton<ITcpPortProbe, TcpPortProbe>();
+builder.Services.AddSingleton<IPortScannerService, PortScannerService>();
+builder.Services.AddSingleton<IWakeOnLanPacketSender, UdpWakeOnLanPacketSender>();
+builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
 builder.Services.AddSingleton<ISnmpTransport, SharpSnmpTransport>();
 builder.Services.AddSingleton<ISnmpService, SnmpService>();
 builder.Services.AddSingleton<DeviceStatusTracker>();

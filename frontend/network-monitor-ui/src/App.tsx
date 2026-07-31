@@ -5,7 +5,9 @@ import { DevicesPage } from './pages/DevicesPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { OverviewPage } from './pages/OverviewPage'
 import { IpScannerPage } from './pages/IpScannerPage'
+import { PortScannerPage } from './pages/PortScannerPage'
 import { SnmpExplorerPage } from './pages/SnmpExplorerPage'
+import { WakeOnLanPage } from './pages/WakeOnLanPage'
 import { RealtimeProvider } from './realtime/RealtimeProvider'
 import './App.css'
 
@@ -24,6 +26,8 @@ function App() {
             <Route index element={<OverviewPage />} />
             <Route path="devices" element={<DevicesPage />} />
             <Route path="tools/ip-scanner" element={<IpScannerPage />} />
+            <Route path="tools/port-scanner" element={<PortScannerPage />} />
+            <Route path="tools/wake-on-lan" element={<WakeOnLanPage />} />
             <Route path="tools/snmp" element={<SnmpExplorerPage />} />
             <Route
               path="devices/:id"

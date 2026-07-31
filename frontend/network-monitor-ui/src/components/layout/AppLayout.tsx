@@ -18,9 +18,7 @@ interface ToolLink {
 }
 
 const futureTools: ToolLink[] = [
-  { label: 'Wake-on-LAN', icon: Power },
   { label: 'Config Backup', icon: DatabaseBackup },
-  { label: 'Port Scanner', icon: Cable },
 ]
 
 export function AppLayout() {
@@ -56,6 +54,14 @@ export function AppLayout() {
           <NavLink to="/tools/snmp">
             <Network size={18} aria-hidden="true" />
             SNMP Explorer
+          </NavLink>
+          <NavLink to="/tools/wake-on-lan">
+            <Power size={18} aria-hidden="true" />
+            Wake-on-LAN
+          </NavLink>
+          <NavLink to="/tools/port-scanner">
+            <Cable size={18} aria-hidden="true" />
+            Port Scanner
           </NavLink>
           {futureTools.map(({ label, icon: Icon }) => (
             <span className="disabled-nav-item" key={label} aria-disabled="true">

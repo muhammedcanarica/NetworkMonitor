@@ -10,6 +10,7 @@ public sealed class InterfaceTrafficSample
     public double? InBitsPerSecond { get; set; }
     public double? OutBitsPerSecond { get; set; }
     public string OperStatus { get; set; } = "Unknown";
+    public string? AdminStatus { get; set; }
     public long SysUpTimeTicks { get; set; }
     public long? CounterDiscontinuityTicks { get; set; }
     public SnmpMonitoredInterface MonitoredInterface { get; set; } = null!;

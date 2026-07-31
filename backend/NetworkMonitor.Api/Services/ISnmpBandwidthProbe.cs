@@ -14,6 +14,7 @@ public sealed record InterfaceCounterReading(
     int InterfaceIndex,
     long InOctets,
     long OutOctets,
-    string OperStatus,
+    string? AdminStatus,
+    string? OperStatus,
     long SysUpTimeTicks,
     long? CounterDiscontinuityTicks);

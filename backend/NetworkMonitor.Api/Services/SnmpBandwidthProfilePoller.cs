@@ -11,6 +11,7 @@ public sealed class SnmpBandwidthProfilePoller(
     INetworkOperationCredentialResolver credentialResolver,
     ISnmpBandwidthProbe probe,
     IInterfaceBandwidthThresholdEvaluator thresholdEvaluator,
+    IInterfaceStatusIncidentEvaluator statusEvaluator,
     IOptions<SnmpBandwidthMonitoringOptions> options,
     ILogger<SnmpBandwidthProfilePoller> logger) : ISnmpBandwidthProfilePoller
 {
@@ -60,7 +61,8 @@ public sealed class SnmpBandwidthProfilePoller(
                 OutOctets = reading.OutOctets,
                 InBitsPerSecond = rates.InBitsPerSecond,
                 OutBitsPerSecond = rates.OutBitsPerSecond,
-                OperStatus = reading.OperStatus,
+                OperStatus = reading.OperStatus ?? "Unknown",
+                AdminStatus = reading.AdminStatus,
                 SysUpTimeTicks = reading.SysUpTimeTicks,
                 CounterDiscontinuityTicks = reading.CounterDiscontinuityTicks
             };
@@ -82,6 +84,18 @@ public sealed class SnmpBandwidthProfilePoller(
             catch (Exception exception)
             {
                 logger.LogWarning("Bandwidth threshold evaluation failed for interface {InterfaceId} ({ErrorType}).", sample.SnmpMonitoredInterfaceId, exception.GetType().Name);
+            }
+        }
+        foreach (var sample in persistedSamples)
+        {
+            try
+            {
+                await statusEvaluator.EvaluateAsync(sample.SnmpMonitoredInterfaceId, sample.AdminStatus, sample.OperStatus, sample.Timestamp, cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+            catch (Exception exception)
+            {
+                logger.LogWarning("Interface status evaluation failed for interface {InterfaceId} ({ErrorType}).", sample.SnmpMonitoredInterfaceId, exception.GetType().Name);
             }
         }
     }

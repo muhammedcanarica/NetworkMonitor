@@ -14,16 +14,17 @@ public sealed class SnmpBandwidthProfilePollerTests
     {
         await using var database = await TestDatabase.CreateAsync();
         var profile = await AddProfile(database, true);
-        var probe = new FakeProbe([new InterfaceCounterReading(1, 1_000, 2_000, "Up", 10_000, 5)]);
+        var probe = new FakeProbe([new InterfaceCounterReading(1, 1_000, 2_000, "Up", "Up", 10_000, 5)]);
         var poller = CreatePoller(database, probe);
 
         await poller.PollAsync(profile.Id, CancellationToken.None);
         var first = Assert.Single(database.Context.InterfaceTrafficSamples);
         Assert.Null(first.InBitsPerSecond);
+        Assert.Equal("Up", first.AdminStatus);
         Assert.Equal([1], probe.LastIndexes);
 
         await Task.Delay(20);
-        probe.Readings = [new InterfaceCounterReading(1, 2_000, 3_000, "Up", 10_100, 5)];
+        probe.Readings = [new InterfaceCounterReading(1, 2_000, 3_000, "Up", "Up", 10_100, 5)];
         await poller.PollAsync(profile.Id, CancellationToken.None);
 
         var samples = database.Context.InterfaceTrafficSamples.OrderBy(item => item.Timestamp).ToList();
@@ -55,7 +56,7 @@ public sealed class SnmpBandwidthProfilePollerTests
         {
             SnmpHandler = (_, _, _) => throw new NetworkOperationCredentialException("Saved credential could not be used.")
         };
-        var poller = new SnmpBandwidthProfilePoller(database.Context, resolver, probe, new NoOpEvaluator(), Options.Create(OptionsValue()), NullLogger<SnmpBandwidthProfilePoller>.Instance);
+        var poller = new SnmpBandwidthProfilePoller(database.Context, resolver, probe, new NoOpEvaluator(), new NoOpStatusEvaluator(), Options.Create(OptionsValue()), NullLogger<SnmpBandwidthProfilePoller>.Instance);
 
         await Assert.ThrowsAsync<NetworkOperationCredentialException>(() => poller.PollAsync(profile.Id, CancellationToken.None));
         Assert.Equal(0, probe.CallCount);
@@ -66,8 +67,21 @@ public sealed class SnmpBandwidthProfilePollerTests
     {
         await using var database = await TestDatabase.CreateAsync();
         var profile = await AddProfile(database, true);
-        var probe = new FakeProbe([new InterfaceCounterReading(1, 1_000, 2_000, "Up", 10_000, 5)]);
-        var poller = new SnmpBandwidthProfilePoller(database.Context, new StubNetworkOperationCredentialResolver(), probe, new ThrowingEvaluator(), Options.Create(OptionsValue()), NullLogger<SnmpBandwidthProfilePoller>.Instance);
+        var probe = new FakeProbe([new InterfaceCounterReading(1, 1_000, 2_000, "Up", "Up", 10_000, 5)]);
+        var poller = new SnmpBandwidthProfilePoller(database.Context, new StubNetworkOperationCredentialResolver(), probe, new ThrowingEvaluator(), new NoOpStatusEvaluator(), Options.Create(OptionsValue()), NullLogger<SnmpBandwidthProfilePoller>.Instance);
+
+        await poller.PollAsync(profile.Id, CancellationToken.None);
+
+        Assert.Single(database.Context.InterfaceTrafficSamples);
+    }
+
+    [Fact]
+    public async Task PollAsync_StatusEvaluatorFailureDoesNotLosePersistedSample()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var profile = await AddProfile(database, true);
+        var probe = new FakeProbe([new InterfaceCounterReading(1, 1_000, 2_000, "Up", "Down", 10_000, 5)]);
+        var poller = new SnmpBandwidthProfilePoller(database.Context, new StubNetworkOperationCredentialResolver(), probe, new NoOpEvaluator(), new ThrowingStatusEvaluator(), Options.Create(OptionsValue()), NullLogger<SnmpBandwidthProfilePoller>.Instance);
 
         await poller.PollAsync(profile.Id, CancellationToken.None);
 
@@ -75,7 +89,7 @@ public sealed class SnmpBandwidthProfilePollerTests
     }
 
     private static SnmpBandwidthProfilePoller CreatePoller(TestDatabase database, FakeProbe probe)
-        => new(database.Context, new StubNetworkOperationCredentialResolver { SnmpHandler = (_, _, _) => Task.FromResult("private") }, probe, new NoOpEvaluator(), Options.Create(OptionsValue()), NullLogger<SnmpBandwidthProfilePoller>.Instance);
+        => new(database.Context, new StubNetworkOperationCredentialResolver { SnmpHandler = (_, _, _) => Task.FromResult("private") }, probe, new NoOpEvaluator(), new NoOpStatusEvaluator(), Options.Create(OptionsValue()), NullLogger<SnmpBandwidthProfilePoller>.Instance);
 
     private static SnmpBandwidthMonitoringOptions OptionsValue() => new() { IntervalSeconds = 60, MaxConcurrentDevices = 2, HistoryRetentionDays = 7, RequestTimeoutMilliseconds = 2000 };
 
@@ -119,5 +133,15 @@ public sealed class SnmpBandwidthProfilePollerTests
     private sealed class ThrowingEvaluator : IInterfaceBandwidthThresholdEvaluator
     {
         public Task EvaluateAsync(int monitoredInterfaceId, InterfaceTrafficSample sample, CancellationToken cancellationToken) => throw new InvalidOperationException("evaluation failed");
+    }
+
+    private sealed class NoOpStatusEvaluator : IInterfaceStatusIncidentEvaluator
+    {
+        public Task EvaluateAsync(int monitoredInterfaceId, string? adminStatus, string? operStatus, DateTimeOffset timestamp, CancellationToken cancellationToken) => Task.CompletedTask;
+    }
+
+    private sealed class ThrowingStatusEvaluator : IInterfaceStatusIncidentEvaluator
+    {
+        public Task EvaluateAsync(int monitoredInterfaceId, string? adminStatus, string? operStatus, DateTimeOffset timestamp, CancellationToken cancellationToken) => throw new InvalidOperationException("status evaluation failed");
     }
 }

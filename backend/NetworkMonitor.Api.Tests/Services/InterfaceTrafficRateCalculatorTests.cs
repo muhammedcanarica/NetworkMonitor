@@ -59,6 +59,6 @@ public sealed class InterfaceTrafficRateCalculatorTests
         Assert.Null(rates.OutBitsPerSecond);
     }
 
-    private static InterfaceCounterReading Reading(long inbound, long outbound) => new(1, inbound, outbound, "Up", 10_000, 5);
+    private static InterfaceCounterReading Reading(long inbound, long outbound) => new(1, inbound, outbound, "Up", "Up", 10_000, 5);
     private static InterfaceTrafficSample Sample(long inbound, long outbound, DateTimeOffset timestamp) => new() { Timestamp = timestamp, InOctets = inbound, OutOctets = outbound, SysUpTimeTicks = 10_000, CounterDiscontinuityTicks = 5 };
 }

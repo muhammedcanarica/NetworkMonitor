@@ -18,6 +18,7 @@ public sealed class SnmpBandwidthProbeTests
             return Task.FromResult<IReadOnlyList<SnmpVariableValue>>([
                 new($"{SnmpOids.Interfaces.HighCapacityInOctets}.7", "1000", "Counter64", 1_000),
                 new($"{SnmpOids.Interfaces.HighCapacityOutOctets}.7", "2000", "Counter64", 2_000),
+                new($"{SnmpOids.Interfaces.AdminStatus}.7", "1", "Integer32", 1),
                 new($"{SnmpOids.Interfaces.OperStatus}.7", "1", "Integer32", 1),
                 new($"{SnmpOids.Interfaces.CounterDiscontinuityTime}.7", "5", "TimeTicks", 5)
             ]);
@@ -27,6 +28,7 @@ public sealed class SnmpBandwidthProbeTests
 
         Assert.Equal(1_000, reading.InOctets);
         Assert.Equal(2_000, reading.OutOctets);
+        Assert.Equal("Up", reading.AdminStatus);
         Assert.Equal("Up", reading.OperStatus);
     }
 

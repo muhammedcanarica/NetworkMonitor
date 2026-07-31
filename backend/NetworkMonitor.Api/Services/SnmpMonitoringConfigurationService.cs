@@ -120,6 +120,7 @@ public sealed class SnmpMonitoringConfigurationService(
                 item.InterfaceIndex,
                 item.InterfaceName,
                 item.Description,
+                sample?.AdminStatus,
                 sample?.OperStatus,
                 sample?.Timestamp,
                 sample?.InBitsPerSecond,
@@ -134,7 +135,8 @@ public sealed class SnmpMonitoringConfigurationService(
                     item.BandwidthThreshold.CreatedAt,
                     item.BandwidthThreshold.UpdatedAt),
                 openIncidents.Any(incident => incident.SnmpMonitoredInterfaceId == item.Id && incident.Type == IncidentType.InterfaceInboundBandwidthHigh),
-                openIncidents.Any(incident => incident.SnmpMonitoredInterfaceId == item.Id && incident.Type == IncidentType.InterfaceOutboundBandwidthHigh)));
+                openIncidents.Any(incident => incident.SnmpMonitoredInterfaceId == item.Id && incident.Type == IncidentType.InterfaceOutboundBandwidthHigh),
+                openIncidents.Any(incident => incident.SnmpMonitoredInterfaceId == item.Id && incident.Type == IncidentType.InterfaceDown)));
         }
         return result;
     }

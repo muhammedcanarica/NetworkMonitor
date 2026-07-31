@@ -95,6 +95,8 @@ builder.Services
     .Validate(options => options.MaxConcurrentDevices > 0, "SNMP bandwidth concurrency must be greater than zero.")
     .Validate(options => options.HistoryRetentionDays > 0, "SNMP bandwidth retention must be greater than zero.")
     .Validate(options => options.RequestTimeoutMilliseconds is >= 500 and <= 10000, "SNMP bandwidth request timeout must be between 500 and 10000 milliseconds.")
+    .Validate(options => options.InterfaceDownTriggerSamples is >= 1 and <= 20, "Interface down trigger samples must be between 1 and 20.")
+    .Validate(options => options.InterfaceUpRecoverySamples is >= 1 and <= 20, "Interface up recovery samples must be between 1 and 20.")
     .ValidateOnStart();
 builder.Services
     .AddControllers()
@@ -135,6 +137,7 @@ builder.Services.AddSingleton<ISnmpBandwidthProbe, SnmpBandwidthProbe>();
 builder.Services.AddScoped<ISnmpMonitoringConfigurationService, SnmpMonitoringConfigurationService>();
 builder.Services.AddScoped<IInterfaceBandwidthThresholdService, InterfaceBandwidthThresholdService>();
 builder.Services.AddScoped<IInterfaceBandwidthThresholdEvaluator, InterfaceBandwidthThresholdEvaluator>();
+builder.Services.AddScoped<IInterfaceStatusIncidentEvaluator, InterfaceStatusIncidentEvaluator>();
 builder.Services.AddScoped<ISnmpBandwidthProfilePoller, SnmpBandwidthProfilePoller>();
 builder.Services.AddScoped<ITopologyDiscoveryService, TopologyDiscoveryService>();
 builder.Services.AddSingleton<DeviceStatusTracker>();

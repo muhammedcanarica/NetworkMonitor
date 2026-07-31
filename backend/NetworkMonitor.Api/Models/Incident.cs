@@ -20,6 +20,6 @@ public sealed class Incident
 
 public enum IncidentStatus { Open, Resolved }
 
-public enum IncidentType { DeviceUnreachable, InterfaceInboundBandwidthHigh, InterfaceOutboundBandwidthHigh }
+public enum IncidentType { DeviceUnreachable, InterfaceInboundBandwidthHigh, InterfaceOutboundBandwidthHigh, InterfaceDown }
 
 public enum BandwidthDirection { Inbound, Outbound }

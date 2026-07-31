@@ -42,13 +42,15 @@ public sealed record InterfaceTrafficSummaryResponse(
     int InterfaceIndex,
     string InterfaceName,
     string? Description,
+    string? AdminStatus,
     string? OperStatus,
     DateTimeOffset? LastSampleAt,
     double? InboundBitsPerSecond,
     double? OutboundBitsPerSecond,
     InterfaceBandwidthThresholdResponse? Threshold,
     bool HasOpenInboundAlert,
-    bool HasOpenOutboundAlert);
+    bool HasOpenOutboundAlert,
+    bool HasActiveDownIncident);
 
 public sealed record InterfaceTrafficSampleResponse(
     DateTimeOffset Timestamp,

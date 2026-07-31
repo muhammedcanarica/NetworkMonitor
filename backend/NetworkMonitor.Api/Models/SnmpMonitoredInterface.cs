@@ -9,7 +9,12 @@ public sealed class SnmpMonitoredInterface
     public string? Description { get; set; }
     public bool IsEnabled { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
+    public InterfaceOperationalState? LastOperationalState { get; set; }
+    public int ConsecutiveDownSamples { get; set; }
+    public int ConsecutiveUpSamples { get; set; }
     public SnmpMonitoringProfile Profile { get; set; } = null!;
     public InterfaceBandwidthThreshold? BandwidthThreshold { get; set; }
     public ICollection<InterfaceTrafficSample> Samples { get; set; } = new List<InterfaceTrafficSample>();
 }
+
+public enum InterfaceOperationalState { Up, Problem, Neutral }

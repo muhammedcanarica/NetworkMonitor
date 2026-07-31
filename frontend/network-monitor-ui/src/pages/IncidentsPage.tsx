@@ -62,6 +62,7 @@ function IncidentRow({ incident }: { incident: Incident }) {
 }
 
 function formatIncidentType(type: Incident['type']) {
+  if (type === 'InterfaceDown') return 'Interface Down'
   if (type === 'InterfaceInboundBandwidthHigh') return 'High Inbound Bandwidth'
   if (type === 'InterfaceOutboundBandwidthHigh') return 'High Outbound Bandwidth'
   return 'Device Unreachable'

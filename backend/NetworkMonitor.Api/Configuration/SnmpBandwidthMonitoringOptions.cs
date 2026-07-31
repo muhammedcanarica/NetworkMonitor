@@ -10,4 +10,6 @@ public sealed class SnmpBandwidthMonitoringOptions
     public int MaxConcurrentDevices { get; init; } = 4;
     public int HistoryRetentionDays { get; init; } = 7;
     public int RequestTimeoutMilliseconds { get; init; } = 5000;
+    public int InterfaceDownTriggerSamples { get; init; } = 2;
+    public int InterfaceUpRecoverySamples { get; init; } = 2;
 }

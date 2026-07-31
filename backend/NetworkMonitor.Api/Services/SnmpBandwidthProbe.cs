@@ -48,10 +48,21 @@ public sealed class SnmpBandwidthProbe(ISnmpTransport transport) : ISnmpBandwidt
                     1 => "Up",
                     2 => "Down",
                     3 => "Testing",
-                    _ => "Unknown"
+                    4 => "Unknown",
+                    5 => "Dormant",
+                    6 => "NotPresent",
+                    7 => "LowerLayerDown",
+                    _ => null
+                };
+                var adminStatus = GetValue(byOid, SnmpOids.Interfaces.AdminStatus, index)?.NumericValue switch
+                {
+                    1 => "Up",
+                    2 => "Down",
+                    3 => "Testing",
+                    _ => null
                 };
                 var discontinuity = ToInt64(GetValue(byOid, SnmpOids.Interfaces.CounterDiscontinuityTime, index)?.NumericValue);
-                results.Add(new InterfaceCounterReading(index, inOctets.Value, outOctets.Value, operStatus, uptime, discontinuity));
+                results.Add(new InterfaceCounterReading(index, inOctets.Value, outOctets.Value, adminStatus, operStatus, uptime, discontinuity));
             }
         }
 
@@ -63,6 +74,7 @@ public sealed class SnmpBandwidthProbe(ISnmpTransport transport) : ISnmpBandwidt
         yield return $"{SnmpOids.Interfaces.HighCapacityInOctets}.{index}";
         yield return $"{SnmpOids.Interfaces.HighCapacityOutOctets}.{index}";
         yield return $"{SnmpOids.Interfaces.OperStatus}.{index}";
+        yield return $"{SnmpOids.Interfaces.AdminStatus}.{index}";
         yield return $"{SnmpOids.Interfaces.CounterDiscontinuityTime}.{index}";
     }
 

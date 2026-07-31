@@ -63,6 +63,39 @@ public sealed class SnmpMonitoringConfigurationServiceTests
         await Assert.ThrowsAsync<SnmpMonitoringNotFoundException>(() => service.GetAsync(999, CancellationToken.None));
     }
 
+    [Fact]
+    public async Task GetSummaryAsync_ReturnsAdminOperStatusAndActualOpenDownIncidentState()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var device = await database.AddDeviceAsync();
+        var credential = await AddCredential(database);
+        var service = new SnmpMonitoringConfigurationService(database.Context, new StubNetworkOperationCredentialResolver(), new StubSnmpService());
+        await service.UpdateAsync(device.Id, new UpdateSnmpMonitoringRequest { CredentialId = credential.Id, InterfaceIndexes = [1] }, CancellationToken.None);
+        var monitored = await database.Context.SnmpMonitoredInterfaces.SingleAsync();
+        database.Context.InterfaceTrafficSamples.Add(new InterfaceTrafficSample
+        {
+            SnmpMonitoredInterfaceId = monitored.Id, Timestamp = DateTimeOffset.UtcNow,
+            InOctets = 1, OutOctets = 1, AdminStatus = "Up", OperStatus = "Down"
+        });
+        await database.Context.SaveChangesAsync();
+
+        var withoutIncident = Assert.Single(await service.GetSummaryAsync(device.Id, CancellationToken.None));
+        Assert.Equal("Up", withoutIncident.AdminStatus);
+        Assert.Equal("Down", withoutIncident.OperStatus);
+        Assert.False(withoutIncident.HasActiveDownIncident);
+
+        database.Context.Incidents.Add(new Incident
+        {
+            DeviceId = device.Id, SnmpMonitoredInterfaceId = monitored.Id,
+            Type = IncidentType.InterfaceDown, Status = IncidentStatus.Open,
+            Summary = "Interface eth0 is down", StartedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow
+        });
+        await database.Context.SaveChangesAsync();
+
+        Assert.True(Assert.Single(await service.GetSummaryAsync(device.Id, CancellationToken.None)).HasActiveDownIncident);
+    }
+
     private static InterfaceTrafficSample Sample(int interfaceId, DateTimeOffset timestamp, long octets) => new() { SnmpMonitoredInterfaceId = interfaceId, Timestamp = timestamp, InOctets = octets, OutOctets = octets, OperStatus = "Up", SysUpTimeTicks = 1 };
     private static async Task<NetworkCredential> AddCredential(TestDatabase database)
     {

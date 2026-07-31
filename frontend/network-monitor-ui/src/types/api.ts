@@ -237,6 +237,7 @@ export interface InterfaceTrafficSummary {
   interfaceIndex: number
   interfaceName: string
   description: string | null
+  adminStatus: string | null
   operStatus: string | null
   lastSampleAt: string | null
   inboundBitsPerSecond: number | null
@@ -244,6 +245,7 @@ export interface InterfaceTrafficSummary {
   threshold: InterfaceBandwidthThreshold | null
   hasOpenInboundAlert: boolean
   hasOpenOutboundAlert: boolean
+  hasActiveDownIncident: boolean
 }
 
 export interface InterfaceBandwidthThreshold {
@@ -317,7 +319,7 @@ export interface TopologyDiscoveryResponse {
 }
 
 export type IncidentStatus = 'Open' | 'Resolved'
-export type IncidentType = 'DeviceUnreachable' | 'InterfaceInboundBandwidthHigh' | 'InterfaceOutboundBandwidthHigh'
+export type IncidentType = 'DeviceUnreachable' | 'InterfaceInboundBandwidthHigh' | 'InterfaceOutboundBandwidthHigh' | 'InterfaceDown'
 export type BandwidthDirection = 'Inbound' | 'Outbound'
 
 export interface Incident {

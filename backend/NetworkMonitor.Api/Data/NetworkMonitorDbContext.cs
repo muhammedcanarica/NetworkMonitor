@@ -154,12 +154,14 @@ public sealed class NetworkMonitorDbContext(DbContextOptions<NetworkMonitorDbCon
         monitoredInterface.Property(item => item.InterfaceName).IsRequired().HasMaxLength(255);
         monitoredInterface.Property(item => item.Description).HasMaxLength(500);
         monitoredInterface.Property(item => item.CreatedAt).HasConversion(value => value.ToUnixTimeMilliseconds(), value => DateTimeOffset.FromUnixTimeMilliseconds(value)).IsRequired();
+        monitoredInterface.Property(item => item.LastOperationalState).HasConversion<string>().HasMaxLength(16);
         monitoredInterface.HasIndex(item => new { item.SnmpMonitoringProfileId, item.InterfaceIndex }).IsUnique();
         monitoredInterface.HasOne(item => item.Profile).WithMany(item => item.Interfaces).HasForeignKey(item => item.SnmpMonitoringProfileId).OnDelete(DeleteBehavior.Cascade);
 
         var trafficSample = modelBuilder.Entity<InterfaceTrafficSample>();
         trafficSample.Property(item => item.Timestamp).HasConversion(value => value.ToUnixTimeMilliseconds(), value => DateTimeOffset.FromUnixTimeMilliseconds(value)).IsRequired();
         trafficSample.Property(item => item.OperStatus).IsRequired().HasMaxLength(16);
+        trafficSample.Property(item => item.AdminStatus).HasMaxLength(16);
         trafficSample.HasIndex(item => new { item.SnmpMonitoredInterfaceId, item.Timestamp });
         trafficSample.HasOne(item => item.MonitoredInterface).WithMany(item => item.Samples).HasForeignKey(item => item.SnmpMonitoredInterfaceId).OnDelete(DeleteBehavior.Cascade);
 

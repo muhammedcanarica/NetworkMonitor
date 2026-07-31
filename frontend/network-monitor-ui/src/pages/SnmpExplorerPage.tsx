@@ -360,7 +360,7 @@ export function SnmpExplorerPage() {
                   {interfaces.map((item) => (
                     <tr key={item.index}>
                       <td className="mono">{item.index}</td>
-                      <td>{item.description || 'Unavailable'}</td>
+                      <td>{item.name || item.description || 'Unavailable'}</td>
                       <td><SnmpStatus value={item.adminStatus} /></td>
                       <td><SnmpStatus value={item.operStatus} /></td>
                       <td className="mono">{formatSpeed(item.speedBitsPerSecond)}</td>

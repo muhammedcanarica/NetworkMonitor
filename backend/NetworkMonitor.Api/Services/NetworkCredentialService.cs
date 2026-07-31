@@ -26,7 +26,17 @@ public sealed class NetworkCredentialService(NetworkMonitorDbContext dbContext, 
         await dbContext.SaveChangesAsync(token); return Map(entity);
     }
 
-    public async Task DeleteAsync(int id, CancellationToken token) { var entity = await dbContext.NetworkCredentials.SingleOrDefaultAsync(item => item.Id == id, token) ?? throw new KeyNotFoundException("Credential was not found."); dbContext.Remove(entity); await dbContext.SaveChangesAsync(token); }
+    public async Task DeleteAsync(int id, CancellationToken token)
+    {
+        var entity = await dbContext.NetworkCredentials.SingleOrDefaultAsync(item => item.Id == id, token)
+            ?? throw new KeyNotFoundException("Credential was not found.");
+        if (await dbContext.SnmpMonitoringProfiles.AnyAsync(profile => profile.CredentialId == id, token))
+        {
+            throw new NetworkCredentialInUseException("Credential is used by an SNMP monitoring profile and cannot be deleted.");
+        }
+        dbContext.Remove(entity);
+        await dbContext.SaveChangesAsync(token);
+    }
 
     public async Task<(NetworkCredentialType Type, string? Username, string Secret)> ResolveAsync(int id, CancellationToken token) { var entity = await dbContext.NetworkCredentials.AsNoTracking().SingleOrDefaultAsync(item => item.Id == id, token) ?? throw new KeyNotFoundException("Credential was not found."); return (entity.Type, entity.Username, secretProtector.Unprotect(entity.ProtectedSecret)); }
 
@@ -42,3 +52,5 @@ public sealed class NetworkCredentialService(NetworkMonitorDbContext dbContext, 
     private static string? NormalizeUsername(NetworkCredentialType type, string? username) => type == NetworkCredentialType.SshPassword ? username?.Trim() : null;
     private static NetworkCredentialResponse Map(NetworkCredential item) => new(item.Id, item.Name, item.Type, item.Username, item.DeviceId, item.CreatedAt, item.UpdatedAt, true);
 }
+
+public sealed class NetworkCredentialInUseException(string message) : InvalidOperationException(message);

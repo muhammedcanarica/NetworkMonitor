@@ -55,6 +55,20 @@ public sealed class NetworkCredentialServiceTests
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.ListAsync(cancellation.Token));
     }
 
+    [Fact]
+    public async Task Delete_RejectsCredentialUsedByMonitoringProfile()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var device = await database.AddDeviceAsync();
+        var service = new NetworkCredentialService(database.Context, new TestProtector());
+        var credential = await service.CreateAsync(new CreateNetworkCredentialRequest { Name = "Monitoring SNMP", Type = NetworkCredentialType.SnmpV2Community, Secret = "private" }, CancellationToken.None);
+        database.Context.SnmpMonitoringProfiles.Add(new SnmpMonitoringProfile { DeviceId = device.Id, CredentialId = credential.Id, IsEnabled = true, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow });
+        await database.Context.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<NetworkCredentialInUseException>(() => service.DeleteAsync(credential.Id, CancellationToken.None));
+        Assert.NotNull(await database.Context.NetworkCredentials.FindAsync(credential.Id));
+    }
+
     private sealed class TestProtector : ISecretProtector
     {
         public string Protect(string secret) => Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(secret));

@@ -29,6 +29,7 @@ import { incidentsApi } from '../api/incidents'
 import { DeviceConfigSummary } from '../components/device-detail/DeviceConfigSummary'
 import { DevicePortSnapshot } from '../components/device-detail/DevicePortSnapshot'
 import { DeviceSnmpPanel } from '../components/device-detail/DeviceSnmpPanel'
+import { DeviceBandwidthPanel } from '../components/device-detail/DeviceBandwidthPanel'
 import { ConnectionIndicator } from '../components/realtime/ConnectionIndicator'
 import { MetricCard } from '../components/ui/MetricCard'
 import { StatePanel } from '../components/ui/StatePanel'
@@ -251,6 +252,7 @@ export function DeviceDetailPage() {
         <DevicePortSnapshot ipAddress={device.ipAddress} />
       </section>
       <DeviceSnmpPanel ipAddress={device.ipAddress} />
+      <DeviceBandwidthPanel deviceId={device.id} />
 
       <section className="metrics-grid detail-metrics" aria-label="24 hour monitoring summary">
         <MetricCard label="24h uptime" value={formatPercentage(summary.uptimePercentage)} hint={`${summary.successfulChecks} successful checks`} icon={Activity} tone="up" />

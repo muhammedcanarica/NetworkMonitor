@@ -14,6 +14,9 @@ public sealed class NetworkMonitorDbContext(DbContextOptions<NetworkMonitorDbCon
     public DbSet<ConfigBackup> ConfigBackups => Set<ConfigBackup>();
     public DbSet<Incident> Incidents => Set<Incident>();
     public DbSet<NetworkCredential> NetworkCredentials => Set<NetworkCredential>();
+    public DbSet<SnmpMonitoringProfile> SnmpMonitoringProfiles => Set<SnmpMonitoringProfile>();
+    public DbSet<SnmpMonitoredInterface> SnmpMonitoredInterfaces => Set<SnmpMonitoredInterface>();
+    public DbSet<InterfaceTrafficSample> InterfaceTrafficSamples => Set<InterfaceTrafficSample>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -130,5 +133,25 @@ public sealed class NetworkMonitorDbContext(DbContextOptions<NetworkMonitorDbCon
         credential.Property(item => item.UpdatedAt).HasConversion(value => value.ToUnixTimeMilliseconds(), value => DateTimeOffset.FromUnixTimeMilliseconds(value)).IsRequired();
         credential.HasIndex(item => item.Name).IsUnique();
         credential.HasOne(item => item.Device).WithMany().HasForeignKey(item => item.DeviceId).OnDelete(DeleteBehavior.SetNull);
+
+        var snmpProfile = modelBuilder.Entity<SnmpMonitoringProfile>();
+        snmpProfile.Property(item => item.CreatedAt).HasConversion(value => value.ToUnixTimeMilliseconds(), value => DateTimeOffset.FromUnixTimeMilliseconds(value)).IsRequired();
+        snmpProfile.Property(item => item.UpdatedAt).HasConversion(value => value.ToUnixTimeMilliseconds(), value => DateTimeOffset.FromUnixTimeMilliseconds(value)).IsRequired();
+        snmpProfile.HasIndex(item => item.DeviceId).IsUnique();
+        snmpProfile.HasOne(item => item.Device).WithMany().HasForeignKey(item => item.DeviceId).OnDelete(DeleteBehavior.Cascade);
+        snmpProfile.HasOne(item => item.Credential).WithMany().HasForeignKey(item => item.CredentialId).OnDelete(DeleteBehavior.Restrict);
+
+        var monitoredInterface = modelBuilder.Entity<SnmpMonitoredInterface>();
+        monitoredInterface.Property(item => item.InterfaceName).IsRequired().HasMaxLength(255);
+        monitoredInterface.Property(item => item.Description).HasMaxLength(500);
+        monitoredInterface.Property(item => item.CreatedAt).HasConversion(value => value.ToUnixTimeMilliseconds(), value => DateTimeOffset.FromUnixTimeMilliseconds(value)).IsRequired();
+        monitoredInterface.HasIndex(item => new { item.SnmpMonitoringProfileId, item.InterfaceIndex }).IsUnique();
+        monitoredInterface.HasOne(item => item.Profile).WithMany(item => item.Interfaces).HasForeignKey(item => item.SnmpMonitoringProfileId).OnDelete(DeleteBehavior.Cascade);
+
+        var trafficSample = modelBuilder.Entity<InterfaceTrafficSample>();
+        trafficSample.Property(item => item.Timestamp).HasConversion(value => value.ToUnixTimeMilliseconds(), value => DateTimeOffset.FromUnixTimeMilliseconds(value)).IsRequired();
+        trafficSample.Property(item => item.OperStatus).IsRequired().HasMaxLength(16);
+        trafficSample.HasIndex(item => new { item.SnmpMonitoredInterfaceId, item.Timestamp });
+        trafficSample.HasOne(item => item.MonitoredInterface).WithMany(item => item.Samples).HasForeignKey(item => item.SnmpMonitoredInterfaceId).OnDelete(DeleteBehavior.Cascade);
     }
 }

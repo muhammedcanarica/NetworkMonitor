@@ -80,6 +80,7 @@ public sealed class SnmpService(ISnmpTransport transport) : ISnmpService
         var columns = new[]
         {
             SnmpOids.Interfaces.Index,
+            SnmpOids.Interfaces.Name,
             SnmpOids.Interfaces.Description,
             SnmpOids.Interfaces.Speed,
             SnmpOids.Interfaces.AdminStatus,
@@ -178,6 +179,8 @@ public sealed class SnmpService(ISnmpTransport transport) : ISnmpService
 
         private string? Description { get; set; }
 
+        private string? Name { get; set; }
+
         private string AdminStatus { get; set; } = "Unknown";
 
         private string OperStatus { get; set; } = "Unknown";
@@ -188,6 +191,9 @@ public sealed class SnmpService(ISnmpTransport transport) : ISnmpService
         {
             switch (columnOid)
             {
+                case SnmpOids.Interfaces.Name:
+                    Name = value.Value;
+                    break;
                 case SnmpOids.Interfaces.Description:
                     Description = value.Value;
                     break;
@@ -207,6 +213,7 @@ public sealed class SnmpService(ISnmpTransport transport) : ISnmpService
         {
             return new SnmpInterfaceResponse(
                 Index,
+                Name,
                 Description,
                 AdminStatus,
                 OperStatus,

@@ -21,6 +21,7 @@ public sealed record SnmpSystemInfoResponse(
 
 public sealed record SnmpInterfaceResponse(
     int Index,
+    string? Name,
     string? Description,
     string AdminStatus,
     string OperStatus,

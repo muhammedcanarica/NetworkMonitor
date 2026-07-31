@@ -29,6 +29,12 @@ public static class SnmpOids
         public const string Speed = "1.3.6.1.2.1.2.2.1.5";
         public const string AdminStatus = "1.3.6.1.2.1.2.2.1.7";
         public const string OperStatus = "1.3.6.1.2.1.2.2.1.8";
+        public const string InOctets = "1.3.6.1.2.1.2.2.1.10";
+        public const string OutOctets = "1.3.6.1.2.1.2.2.1.16";
+        public const string Name = "1.3.6.1.2.1.31.1.1.1.1";
+        public const string HighCapacityInOctets = "1.3.6.1.2.1.31.1.1.1.6";
+        public const string HighCapacityOutOctets = "1.3.6.1.2.1.31.1.1.1.10";
+        public const string CounterDiscontinuityTime = "1.3.6.1.2.1.31.1.1.1.19";
     }
 
     public static class Lldp

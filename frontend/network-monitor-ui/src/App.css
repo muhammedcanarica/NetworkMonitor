@@ -481,6 +481,18 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
 .device-snmp-form { display: flex; align-items: end; gap: 10px; padding: 17px 18px 12px; }
 .device-snmp-form label { display: flex; flex: 1; flex-direction: column; gap: 6px; color: #9dacbf; font-size: 10px; font-weight: 700; }
 .device-snmp-form input { height: 37px; padding: 0 10px; color: var(--text-strong); border: 1px solid #273950; border-radius: 7px; outline: 0; background: #09131f; }
+.bandwidth-panel { margin-top: 18px; }
+.bandwidth-setup { display: grid; gap: 14px; padding: 18px; }
+.bandwidth-setup > label { display: flex; max-width: 430px; flex-direction: column; gap: 6px; color: #9dacbf; font-size: 11px; font-weight: 650; }
+.bandwidth-setup select { height: 40px; padding: 0 11px; color: var(--text-strong); border: 1px solid #273950; border-radius: 8px; background: #09131f; }
+.bandwidth-setup-actions, .bandwidth-toolbar > div, .bandwidth-chart-header { display: flex; align-items: center; gap: 9px; }
+.bandwidth-interface-picker { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; max-height: 310px; overflow: auto; }
+.bandwidth-interface-picker label { display: flex; align-items: center; gap: 9px; padding: 10px; border: 1px solid #273950; border-radius: 8px; background: #09131f; }
+.bandwidth-interface-picker span { display: flex; min-width: 0; flex-direction: column; }.bandwidth-interface-picker small, .bandwidth-panel td small { display: block; color: var(--text-muted); }
+.bandwidth-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+.protocol-badge.muted { color: var(--text-muted); border-color: #334155; background: #111827; }
+.bandwidth-panel tbody tr { cursor: pointer; }.bandwidth-panel tbody tr.selected-row { background: rgba(48,199,215,.08); }
+.bandwidth-chart-section { border-top: 1px solid var(--border); }.bandwidth-chart-header { justify-content: space-between; padding: 14px 18px 0; }
 .device-security-copy { display: flex; align-items: center; gap: 7px; padding: 0 18px 14px; color: #718399; font-size: 10px; }
 .device-security-copy svg { color: var(--cyan); }
 .device-snmp-info { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--border); }
@@ -562,6 +574,8 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
   .device-health-summary > div, .config-summary-content > div, .device-snmp-info > div { border-right: 0; border-bottom: 1px solid var(--border) !important; }
   .device-health-summary > div:last-child, .config-summary-content > div:last-child, .device-snmp-info > div:last-child { border-bottom: 0 !important; }
   .device-snmp-form { align-items: stretch; flex-direction: column; }
+  .bandwidth-interface-picker { grid-template-columns: 1fr; }
+  .bandwidth-toolbar, .bandwidth-chart-header { align-items: stretch; flex-direction: column; }
   .credential-create-panel form { grid-template-columns: 1fr; }
   .wol-form { grid-template-columns: 1fr; }
   .port-scan-form { grid-template-columns: 1fr; }

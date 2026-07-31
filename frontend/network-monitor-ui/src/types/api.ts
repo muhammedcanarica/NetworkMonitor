@@ -204,10 +204,59 @@ export interface SnmpSystemInfo {
 
 export interface SnmpInterface {
   index: number
+  name: string | null
   description: string | null
   adminStatus: 'Up' | 'Down' | 'Testing' | 'Unknown'
   operStatus: 'Up' | 'Down' | 'Testing' | 'Unknown'
   speedBitsPerSecond: number | null
+}
+
+export interface SnmpMonitoredInterface {
+  interfaceIndex: number
+  interfaceName: string
+  description: string | null
+  isEnabled: boolean
+}
+
+export interface SnmpMonitoringProfile {
+  deviceId: number
+  credentialId: number
+  isEnabled: boolean
+  createdAt: string
+  updatedAt: string
+  interfaces: SnmpMonitoredInterface[]
+}
+
+export interface UpdateSnmpMonitoringRequest {
+  credentialId: number
+  isEnabled: boolean
+  interfaceIndexes: number[]
+}
+
+export interface InterfaceTrafficSummary {
+  interfaceIndex: number
+  interfaceName: string
+  description: string | null
+  operStatus: string | null
+  lastSampleAt: string | null
+  inboundBitsPerSecond: number | null
+  outboundBitsPerSecond: number | null
+}
+
+export interface InterfaceTrafficSample {
+  timestamp: string
+  inOctets: number
+  outOctets: number
+  inboundBitsPerSecond: number | null
+  outboundBitsPerSecond: number | null
+  operStatus: string
+}
+
+export interface InterfaceTrafficHistory {
+  interfaceIndex: number
+  interfaceName: string
+  hours: number
+  samples: InterfaceTrafficSample[]
 }
 
 export interface TopologyDiscoveryRequest {

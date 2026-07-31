@@ -89,6 +89,14 @@ builder.Services
     .Validate(options => options.MaxConcurrentDiscoveries > 0, "Topology concurrency must be greater than zero.")
     .ValidateOnStart();
 builder.Services
+    .AddOptions<SnmpBandwidthMonitoringOptions>()
+    .Bind(builder.Configuration.GetSection(SnmpBandwidthMonitoringOptions.SectionName))
+    .Validate(options => options.IntervalSeconds is >= SnmpBandwidthMonitoringOptions.MinimumIntervalSeconds and <= SnmpBandwidthMonitoringOptions.MaximumIntervalSeconds, "SNMP bandwidth interval must be between 15 and 3600 seconds.")
+    .Validate(options => options.MaxConcurrentDevices > 0, "SNMP bandwidth concurrency must be greater than zero.")
+    .Validate(options => options.HistoryRetentionDays > 0, "SNMP bandwidth retention must be greater than zero.")
+    .Validate(options => options.RequestTimeoutMilliseconds is >= 500 and <= 10000, "SNMP bandwidth request timeout must be between 500 and 10000 milliseconds.")
+    .ValidateOnStart();
+builder.Services
     .AddControllers()
     .AddJsonOptions(options =>
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -123,10 +131,14 @@ builder.Services.AddSingleton<IWakeOnLanPacketSender, UdpWakeOnLanPacketSender>(
 builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
 builder.Services.AddSingleton<ISnmpTransport, SharpSnmpTransport>();
 builder.Services.AddSingleton<ISnmpService, SnmpService>();
+builder.Services.AddSingleton<ISnmpBandwidthProbe, SnmpBandwidthProbe>();
+builder.Services.AddScoped<ISnmpMonitoringConfigurationService, SnmpMonitoringConfigurationService>();
+builder.Services.AddScoped<ISnmpBandwidthProfilePoller, SnmpBandwidthProfilePoller>();
 builder.Services.AddScoped<ITopologyDiscoveryService, TopologyDiscoveryService>();
 builder.Services.AddSingleton<DeviceStatusTracker>();
 builder.Services.AddSingleton<IMonitoringUpdatePublisher, SignalRMonitoringUpdatePublisher>();
 builder.Services.AddHostedService<DeviceMonitoringService>();
+builder.Services.AddHostedService<SnmpBandwidthMonitoringService>();
 
 var app = builder.Build();
 await AdminBootstrapper.BootstrapAsync(app.Services);

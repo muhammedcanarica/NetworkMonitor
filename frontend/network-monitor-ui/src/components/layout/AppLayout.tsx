@@ -15,6 +15,7 @@ import {
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { ConnectionIndicator } from '../realtime/ConnectionIndicator'
 import { useAuth } from '../../auth/AuthContext'
+import { NotificationCenter } from '../notifications/NotificationCenter'
 
 export function AppLayout() {
   const { user, logout } = useAuth()
@@ -77,6 +78,7 @@ export function AppLayout() {
         </nav>
 
         <div className="sidebar-footer">
+          <NotificationCenter />
           <ConnectionIndicator />
           <div className="sidebar-user"><span>{user?.username}</span><button type="button" title="Sign out" onClick={() => void logout().then(() => navigate('/login'))}><LogOut size={15} /></button></div>
         </div>

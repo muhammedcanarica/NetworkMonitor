@@ -9,6 +9,7 @@ namespace NetworkMonitor.Api.Services;
 
 public sealed class InterfaceStatusIncidentEvaluator(
     NetworkMonitorDbContext dbContext,
+    IIncidentNotificationPublisher notificationPublisher,
     IOptions<SnmpBandwidthMonitoringOptions> options) : IInterfaceStatusIncidentEvaluator
 {
     private readonly SnmpBandwidthMonitoringOptions _options = options.Value;
@@ -87,11 +88,20 @@ public sealed class InterfaceStatusIncidentEvaluator(
                 break;
         }
         monitored.LastOperationalState = state;
-        try { await dbContext.SaveChangesAsync(cancellationToken); }
+        var incidentCreated = false;
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+            incidentCreated = newIncident is not null;
+        }
         catch (DbUpdateException exception) when (newIncident is not null && exception.InnerException is SqliteException { SqliteErrorCode: 19 })
         {
             dbContext.Entry(newIncident).State = EntityState.Detached;
             await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        if (incidentCreated)
+        {
+            await notificationPublisher.PublishOpenedAsync(newIncident!.Id, cancellationToken);
         }
     }
 

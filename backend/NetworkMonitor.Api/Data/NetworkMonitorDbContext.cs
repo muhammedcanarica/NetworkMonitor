@@ -13,6 +13,7 @@ public sealed class NetworkMonitorDbContext(DbContextOptions<NetworkMonitorDbCon
 
     public DbSet<ConfigBackup> ConfigBackups => Set<ConfigBackup>();
     public DbSet<Incident> Incidents => Set<Incident>();
+    public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<NetworkCredential> NetworkCredentials => Set<NetworkCredential>();
     public DbSet<SnmpMonitoringProfile> SnmpMonitoringProfiles => Set<SnmpMonitoringProfile>();
     public DbSet<SnmpMonitoredInterface> SnmpMonitoredInterfaces => Set<SnmpMonitoredInterface>();
@@ -132,6 +133,18 @@ public sealed class NetworkMonitorDbContext(DbContextOptions<NetworkMonitorDbCon
             .IsUnique();
         incident.HasOne(item => item.Device).WithMany().HasForeignKey(item => item.DeviceId).OnDelete(DeleteBehavior.Cascade);
         incident.HasOne(item => item.SnmpMonitoredInterface).WithMany().HasForeignKey(item => item.SnmpMonitoredInterfaceId).OnDelete(DeleteBehavior.SetNull);
+
+        var notification = modelBuilder.Entity<Notification>();
+        notification.Property(item => item.Type).HasConversion<string>().HasMaxLength(32).IsRequired();
+        notification.Property(item => item.Title).IsRequired().HasMaxLength(100);
+        notification.Property(item => item.Message).IsRequired().HasMaxLength(500);
+        notification.Property(item => item.CreatedAt).HasConversion(value => value.ToUnixTimeMilliseconds(), value => DateTimeOffset.FromUnixTimeMilliseconds(value)).IsRequired();
+        notification.Property(item => item.ReadAt).HasConversion(value => value.HasValue ? value.Value.ToUnixTimeMilliseconds() : (long?)null, value => value.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(value.Value) : null);
+        notification.HasIndex(item => item.CreatedAt);
+        notification.HasIndex(item => item.ReadAt);
+        notification.HasIndex(item => new { item.IncidentId, item.Type }).IsUnique();
+        notification.HasOne(item => item.Incident).WithMany().HasForeignKey(item => item.IncidentId).OnDelete(DeleteBehavior.SetNull);
+        notification.HasOne(item => item.Device).WithMany().HasForeignKey(item => item.DeviceId).OnDelete(DeleteBehavior.SetNull);
 
         var credential = modelBuilder.Entity<NetworkCredential>();
         credential.Property(item => item.Name).IsRequired().HasMaxLength(100);

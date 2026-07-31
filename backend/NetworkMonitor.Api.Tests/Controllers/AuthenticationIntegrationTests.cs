@@ -23,6 +23,8 @@ public sealed class AuthenticationIntegrationTests
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/devices")).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/devices/1/interface-traffic")).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/devices/1/interfaces/1/bandwidth-threshold")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/notifications")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/notifications/unread-count")).StatusCode);
         var csrf = await client.GetFromJsonAsync<CsrfResponse>("/api/security/csrf");
 
         var invalid = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login") { Content = JsonContent.Create(new { username = "admin", password = "wrong-password" }) };
@@ -33,6 +35,8 @@ public sealed class AuthenticationIntegrationTests
         valid.Headers.Add("X-CSRF-TOKEN", csrf.Token);
         Assert.Equal(HttpStatusCode.OK, (await client.SendAsync(valid)).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/devices")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/notifications")).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.GetAsync("/api/notifications?limit=101")).StatusCode);
 
         csrf = await client.GetFromJsonAsync<CsrfResponse>("/api/security/csrf");
         var logout = new HttpRequestMessage(HttpMethod.Post, "/api/auth/logout"); logout.Headers.Add("X-CSRF-TOKEN", csrf!.Token);
@@ -40,6 +44,7 @@ public sealed class AuthenticationIntegrationTests
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/devices")).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/devices/1/interface-traffic")).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/devices/1/interfaces/1/bandwidth-threshold")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/notifications")).StatusCode);
     }
 
     private sealed record CsrfResponse(string Token);

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging.Abstractions;
 using NetworkMonitor.Api.Configuration;
 using NetworkMonitor.Api.Models;
 using NetworkMonitor.Api.Services;
@@ -14,7 +15,7 @@ public sealed class InterfaceStatusIncidentEvaluatorTests
     {
         await using var database = await TestDatabase.CreateAsync();
         var monitored = await AddMonitoredInterface(database);
-        var evaluator = CreateEvaluator(database, downTrigger: 2, upRecovery: 2);
+        var evaluator = CreateEvaluator(database, downTrigger: 2, upRecovery: 2, CreatePublisher(database));
 
         await evaluator.EvaluateAsync(monitored.Id, "Up", "Down", Timestamp(0), CancellationToken.None);
         await evaluator.EvaluateAsync(monitored.Id, "Up", "Down", Timestamp(1), CancellationToken.None);
@@ -22,13 +23,14 @@ public sealed class InterfaceStatusIncidentEvaluatorTests
         Assert.Equal(1, monitored.ConsecutiveDownSamples);
 
         database.Context.ChangeTracker.Clear();
-        await CreateEvaluator(database, downTrigger: 2, upRecovery: 2)
+        await CreateEvaluator(database, downTrigger: 2, upRecovery: 2, CreatePublisher(database))
             .EvaluateAsync(monitored.Id, "Up", "Down", Timestamp(2), CancellationToken.None);
 
         var incident = Assert.Single(await database.Context.Incidents.ToListAsync());
         Assert.Equal(IncidentType.InterfaceDown, incident.Type);
         Assert.Equal(IncidentStatus.Open, incident.Status);
         Assert.Equal(monitored.Id, incident.SnmpMonitoredInterfaceId);
+        Assert.Single(await database.Context.Notifications.ToListAsync());
     }
 
     [Fact]
@@ -130,12 +132,19 @@ public sealed class InterfaceStatusIncidentEvaluatorTests
             evaluator.EvaluateAsync(monitored.Id, "Up", "Down", Timestamp(1), cancellation.Token));
     }
 
-    private static InterfaceStatusIncidentEvaluator CreateEvaluator(TestDatabase database, int downTrigger, int upRecovery)
-        => new(database.Context, Options.Create(new SnmpBandwidthMonitoringOptions
+    private static InterfaceStatusIncidentEvaluator CreateEvaluator(
+        TestDatabase database,
+        int downTrigger,
+        int upRecovery,
+        IIncidentNotificationPublisher? publisher = null)
+        => new(database.Context, publisher ?? new StubIncidentNotificationPublisher(), Options.Create(new SnmpBandwidthMonitoringOptions
         {
             InterfaceDownTriggerSamples = downTrigger,
             InterfaceUpRecoverySamples = upRecovery
         }));
+
+    private static IncidentNotificationPublisher CreatePublisher(TestDatabase database)
+        => new(new NotificationService(database.Context), NullLogger<IncidentNotificationPublisher>.Instance);
 
     private static DateTimeOffset Timestamp(int minute)
         => new(2026, 7, 31, 9, minute, 0, TimeSpan.Zero);

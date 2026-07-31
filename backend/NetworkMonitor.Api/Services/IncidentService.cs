@@ -5,7 +5,9 @@ using NetworkMonitor.Api.Models;
 
 namespace NetworkMonitor.Api.Services;
 
-public sealed class IncidentService(NetworkMonitorDbContext dbContext) : IIncidentService
+public sealed class IncidentService(
+    NetworkMonitorDbContext dbContext,
+    IIncidentNotificationPublisher notificationPublisher) : IIncidentService
 {
     public async Task HandleStatusTransitionAsync(
         int deviceId,
@@ -46,6 +48,7 @@ public sealed class IncidentService(NetworkMonitorDbContext dbContext) : IIncide
         try
         {
             await dbContext.SaveChangesAsync(cancellationToken);
+            await notificationPublisher.PublishOpenedAsync(incident.Id, cancellationToken);
         }
         catch (DbUpdateException exception) when (exception.InnerException is SqliteException { SqliteErrorCode: 19 })
         {

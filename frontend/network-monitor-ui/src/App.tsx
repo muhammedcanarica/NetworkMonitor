@@ -17,6 +17,8 @@ import './App.css'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import { LoginPage } from './pages/LoginPage'
 import { CredentialsPage } from './pages/CredentialsPage'
+import { NotificationsPage } from './pages/NotificationsPage'
+import { NotificationProvider } from './notifications/NotificationProvider'
 
 const DeviceDetailPage = lazy(() =>
   import('./pages/DeviceDetailPage').then((module) => ({
@@ -34,6 +36,7 @@ function App() {
             <Route path="devices" element={<DevicesPage />} />
             <Route path="topology" element={<TopologyPage />} />
             <Route path="incidents" element={<IncidentsPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
             <Route path="settings/credentials" element={<CredentialsPage />} />
             <Route path="tools/ip-scanner" element={<IpScannerPage />} />
             <Route path="tools/config-backup" element={<ConfigBackupPage />} />
@@ -60,7 +63,7 @@ function ProtectedLayout() {
   const { user, loading } = useAuth(); const location = useLocation()
   if (loading) return <div className="route-loading">Checking authentication…</div>
   if (!user) return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />
-  return <RealtimeProvider><AppLayout /></RealtimeProvider>
+  return <NotificationProvider><RealtimeProvider><AppLayout /></RealtimeProvider></NotificationProvider>
 }
 
 export default App

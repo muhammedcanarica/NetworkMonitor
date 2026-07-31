@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using NetworkMonitor.Api.Models;
 using NetworkMonitor.Api.Services;
 using NetworkMonitor.Api.Tests.Infrastructure;
@@ -12,7 +13,7 @@ public sealed class InterfaceBandwidthThresholdEvaluatorTests
     {
         await using var database = await TestDatabase.CreateAsync();
         var monitored = await AddMonitoredInterface(database, breachCount: 3, recoveryCount: 2);
-        var evaluator = new InterfaceBandwidthThresholdEvaluator(database.Context);
+        var evaluator = new InterfaceBandwidthThresholdEvaluator(database.Context, CreatePublisher(database));
 
         await evaluator.EvaluateAsync(monitored.Id, Sample(90, 90), CancellationToken.None);
         await evaluator.EvaluateAsync(monitored.Id, Sample(110, null), CancellationToken.None);
@@ -25,7 +26,7 @@ public sealed class InterfaceBandwidthThresholdEvaluatorTests
         await evaluator.EvaluateAsync(monitored.Id, Sample(110, null), CancellationToken.None);
         await evaluator.EvaluateAsync(monitored.Id, Sample(120, null), CancellationToken.None);
         database.Context.ChangeTracker.Clear();
-        await new InterfaceBandwidthThresholdEvaluator(database.Context).EvaluateAsync(monitored.Id, Sample(130, null), CancellationToken.None);
+        await new InterfaceBandwidthThresholdEvaluator(database.Context, new StubIncidentNotificationPublisher()).EvaluateAsync(monitored.Id, Sample(130, null), CancellationToken.None);
 
         Assert.Single(await database.Context.Incidents.Where(item => item.Status == IncidentStatus.Open).ToListAsync());
     }
@@ -35,7 +36,7 @@ public sealed class InterfaceBandwidthThresholdEvaluatorTests
     {
         await using var database = await TestDatabase.CreateAsync();
         var monitored = await AddMonitoredInterface(database, breachCount: 1, recoveryCount: 2);
-        var evaluator = new InterfaceBandwidthThresholdEvaluator(database.Context);
+        var evaluator = new InterfaceBandwidthThresholdEvaluator(database.Context, new StubIncidentNotificationPublisher());
         await evaluator.EvaluateAsync(monitored.Id, Sample(120, null), CancellationToken.None);
         await evaluator.EvaluateAsync(monitored.Id, Sample(90, null), CancellationToken.None);
         Assert.Single(await database.Context.Incidents.Where(item => item.Status == IncidentStatus.Open).ToListAsync());
@@ -53,7 +54,7 @@ public sealed class InterfaceBandwidthThresholdEvaluatorTests
     {
         await using var database = await TestDatabase.CreateAsync();
         var monitored = await AddMonitoredInterface(database, breachCount: 1, recoveryCount: 2);
-        var evaluator = new InterfaceBandwidthThresholdEvaluator(database.Context);
+        var evaluator = new InterfaceBandwidthThresholdEvaluator(database.Context, CreatePublisher(database));
 
         await evaluator.EvaluateAsync(monitored.Id, Sample(120, 130), CancellationToken.None);
         await evaluator.EvaluateAsync(monitored.Id, Sample(140, 150), CancellationToken.None);
@@ -62,6 +63,7 @@ public sealed class InterfaceBandwidthThresholdEvaluatorTests
         Assert.Equal(2, open.Count);
         Assert.Contains(open, item => item.Type == IncidentType.InterfaceInboundBandwidthHigh);
         Assert.Contains(open, item => item.Type == IncidentType.InterfaceOutboundBandwidthHigh);
+        Assert.Equal(2, await database.Context.Notifications.CountAsync());
     }
 
     [Fact]
@@ -72,7 +74,7 @@ public sealed class InterfaceBandwidthThresholdEvaluatorTests
         monitored.Profile.IsEnabled = false;
         await database.Context.SaveChangesAsync();
 
-        await new InterfaceBandwidthThresholdEvaluator(database.Context).EvaluateAsync(monitored.Id, Sample(500, 500), CancellationToken.None);
+        await new InterfaceBandwidthThresholdEvaluator(database.Context, new StubIncidentNotificationPublisher()).EvaluateAsync(monitored.Id, Sample(500, 500), CancellationToken.None);
 
         Assert.Empty(database.Context.Incidents);
     }
@@ -84,6 +86,9 @@ public sealed class InterfaceBandwidthThresholdEvaluatorTests
         OutBitsPerSecond = outboundMbps * 1_000_000,
         OperStatus = "Up"
     };
+
+    private static IncidentNotificationPublisher CreatePublisher(TestDatabase database)
+        => new(new NotificationService(database.Context), NullLogger<IncidentNotificationPublisher>.Instance);
 
     private static async Task<SnmpMonitoredInterface> AddMonitoredInterface(TestDatabase database, int breachCount, int recoveryCount)
     {

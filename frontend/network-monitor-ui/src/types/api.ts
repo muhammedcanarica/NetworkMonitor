@@ -340,6 +340,22 @@ export interface Incident {
   durationSeconds: number
 }
 
+export type NotificationType = 'IncidentOpened'
+
+export interface Notification {
+  id: number
+  type: NotificationType
+  title: string
+  message: string
+  incidentId: number | null
+  deviceId: number | null
+  createdAt: string
+  readAt: string | null
+  isRead: boolean
+}
+
+export interface NotificationUnreadCount { count: number }
+
 export interface CurrentUser { username: string }
 export type NetworkCredentialType = 'SnmpV2Community' | 'SshPassword'
 export interface NetworkCredential { id: number; name: string; type: NetworkCredentialType; username: string | null; deviceId: number | null; createdAt: string; updatedAt: string; hasSecret: boolean }

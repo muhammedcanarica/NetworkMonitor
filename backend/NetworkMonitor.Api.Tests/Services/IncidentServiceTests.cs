@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using NetworkMonitor.Api.Models;
 using NetworkMonitor.Api.Services;
 using NetworkMonitor.Api.Tests.Infrastructure;
@@ -12,7 +13,7 @@ public sealed class IncidentServiceTests
     {
         await using var database = await TestDatabase.CreateAsync();
         var device = await database.AddDeviceAsync();
-        var service = new IncidentService(database.Context);
+        var service = new IncidentService(database.Context, CreatePublisher(database));
         var tracker = new DeviceStatusTracker();
         var status = DeviceStatus.Up;
 
@@ -41,7 +42,7 @@ public sealed class IncidentServiceTests
     {
         await using var database = await TestDatabase.CreateAsync();
         var device = await database.AddDeviceAsync();
-        var service = new IncidentService(database.Context);
+        var service = new IncidentService(database.Context, CreatePublisher(database));
 
         await service.HandleStatusTransitionAsync(device.Id, DeviceStatus.Up, DeviceStatus.Warning, CancellationToken.None);
         Assert.Empty(await database.Context.Incidents.ToListAsync());
@@ -50,6 +51,7 @@ public sealed class IncidentServiceTests
         var incident = Assert.Single(await database.Context.Incidents.ToListAsync());
         Assert.Equal(IncidentStatus.Open, incident.Status);
         Assert.Null(incident.ResolvedAt);
+        Assert.Single(await database.Context.Notifications.ToListAsync());
 
         await service.HandleStatusTransitionAsync(device.Id, DeviceStatus.Down, DeviceStatus.Down, CancellationToken.None);
         await service.HandleStatusTransitionAsync(device.Id, DeviceStatus.Down, DeviceStatus.Warning, CancellationToken.None);
@@ -60,6 +62,7 @@ public sealed class IncidentServiceTests
         Assert.Equal(IncidentStatus.Resolved, incident.Status);
         Assert.NotNull(incident.ResolvedAt);
         Assert.True(incident.ResolvedAt >= incident.StartedAt);
+        Assert.Single(await database.Context.Notifications.ToListAsync());
     }
 
     [Fact]
@@ -67,9 +70,9 @@ public sealed class IncidentServiceTests
     {
         await using var database = await TestDatabase.CreateAsync();
         var device = await database.AddDeviceAsync();
-        await new IncidentService(database.Context).HandleStatusTransitionAsync(device.Id, DeviceStatus.Unknown, DeviceStatus.Down, CancellationToken.None);
+        await new IncidentService(database.Context, new StubIncidentNotificationPublisher()).HandleStatusTransitionAsync(device.Id, DeviceStatus.Unknown, DeviceStatus.Down, CancellationToken.None);
 
-        await new IncidentService(database.Context).HandleStatusTransitionAsync(device.Id, DeviceStatus.Unknown, DeviceStatus.Down, CancellationToken.None);
+        await new IncidentService(database.Context, new StubIncidentNotificationPublisher()).HandleStatusTransitionAsync(device.Id, DeviceStatus.Unknown, DeviceStatus.Down, CancellationToken.None);
 
         Assert.Single(await database.Context.Incidents.Where(item => item.Status == IncidentStatus.Open).ToListAsync());
     }
@@ -79,11 +82,14 @@ public sealed class IncidentServiceTests
     {
         await using var database = await TestDatabase.CreateAsync();
         var device = await database.AddDeviceAsync();
-        var service = new IncidentService(database.Context);
+        var service = new IncidentService(database.Context, new StubIncidentNotificationPublisher());
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
             service.HandleStatusTransitionAsync(device.Id, DeviceStatus.Up, DeviceStatus.Down, cancellation.Token));
     }
+
+    private static IncidentNotificationPublisher CreatePublisher(TestDatabase database)
+        => new(new NotificationService(database.Context), NullLogger<IncidentNotificationPublisher>.Instance);
 }

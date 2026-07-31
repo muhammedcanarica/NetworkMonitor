@@ -5,7 +5,9 @@ using NetworkMonitor.Api.Models;
 
 namespace NetworkMonitor.Api.Services;
 
-public sealed class InterfaceBandwidthThresholdEvaluator(NetworkMonitorDbContext dbContext) : IInterfaceBandwidthThresholdEvaluator
+public sealed class InterfaceBandwidthThresholdEvaluator(
+    NetworkMonitorDbContext dbContext,
+    IIncidentNotificationPublisher notificationPublisher) : IInterfaceBandwidthThresholdEvaluator
 {
     public async Task EvaluateAsync(int monitoredInterfaceId, InterfaceTrafficSample sample, CancellationToken cancellationToken)
     {
@@ -83,14 +85,20 @@ public sealed class InterfaceBandwidthThresholdEvaluator(NetworkMonitorDbContext
             }
         }
 
+        var incidentCreated = false;
         try
         {
             await dbContext.SaveChangesAsync(cancellationToken);
+            incidentCreated = newIncident is not null;
         }
         catch (DbUpdateException exception) when (newIncident is not null && exception.InnerException is SqliteException { SqliteErrorCode: 19 })
         {
             dbContext.Entry(newIncident).State = EntityState.Detached;
             await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        if (incidentCreated)
+        {
+            await notificationPublisher.PublishOpenedAsync(newIncident!.Id, cancellationToken);
         }
     }
 

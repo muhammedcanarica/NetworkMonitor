@@ -126,6 +126,8 @@ builder.Services.AddSingleton<IConfigBackupService, ConfigBackupService>();
 builder.Services.AddSingleton<IConfigDiffService, ConfigDiffService>();
 builder.Services.AddScoped<IConfigBackupStorageService, ConfigBackupStorageService>();
 builder.Services.AddScoped<IIncidentService, IncidentService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IIncidentNotificationPublisher, IncidentNotificationPublisher>();
 builder.Services.AddSingleton<ISecretProtector, DataProtectionSecretProtector>();
 builder.Services.AddScoped<INetworkCredentialService, NetworkCredentialService>();
 builder.Services.AddScoped<INetworkOperationCredentialResolver, NetworkOperationCredentialResolver>();

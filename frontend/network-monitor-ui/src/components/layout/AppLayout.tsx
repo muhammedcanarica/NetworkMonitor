@@ -8,18 +8,8 @@ import {
   Radar,
   Server,
 } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { ConnectionIndicator } from '../realtime/ConnectionIndicator'
-
-interface ToolLink {
-  label: string
-  icon: LucideIcon
-}
-
-const futureTools: ToolLink[] = [
-  { label: 'Config Backup', icon: DatabaseBackup },
-]
 
 export function AppLayout() {
   return (
@@ -63,13 +53,10 @@ export function AppLayout() {
             <Cable size={18} aria-hidden="true" />
             Port Scanner
           </NavLink>
-          {futureTools.map(({ label, icon: Icon }) => (
-            <span className="disabled-nav-item" key={label} aria-disabled="true">
-              <Icon size={18} aria-hidden="true" />
-              {label}
-              <small>Soon</small>
-            </span>
-          ))}
+          <NavLink to="/tools/config-backup">
+            <DatabaseBackup size={18} aria-hidden="true" />
+            Config Backup
+          </NavLink>
         </nav>
 
         <div className="sidebar-footer">

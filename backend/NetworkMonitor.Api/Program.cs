@@ -44,6 +44,12 @@ builder.Services
         "Port scanner maximum timeout must be greater than or equal to the minimum timeout.")
     .ValidateOnStart();
 builder.Services
+    .AddOptions<ConfigBackupOptions>()
+    .Bind(builder.Configuration.GetSection(ConfigBackupOptions.SectionName))
+    .Validate(options => options.ConnectionTimeoutMilliseconds > 0, "Configuration backup connection timeout must be greater than zero.")
+    .Validate(options => options.CommandTimeoutMilliseconds > 0, "Configuration backup command timeout must be greater than zero.")
+    .ValidateOnStart();
+builder.Services
     .AddControllers()
     .AddJsonOptions(options =>
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -66,6 +72,8 @@ builder.Services.AddSingleton<IHostNameResolver, HostNameResolver>();
 builder.Services.AddScoped<IIpScannerService, IpScannerService>();
 builder.Services.AddSingleton<ITcpPortProbe, TcpPortProbe>();
 builder.Services.AddSingleton<IPortScannerService, PortScannerService>();
+builder.Services.AddSingleton<ISshCommandTransport, SshCommandTransport>();
+builder.Services.AddSingleton<IConfigBackupService, ConfigBackupService>();
 builder.Services.AddSingleton<IWakeOnLanPacketSender, UdpWakeOnLanPacketSender>();
 builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
 builder.Services.AddSingleton<ISnmpTransport, SharpSnmpTransport>();

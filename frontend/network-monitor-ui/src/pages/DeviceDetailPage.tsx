@@ -6,6 +6,7 @@ import {
   ArrowUpToLine,
   Cable,
   Clock3,
+  DatabaseBackup,
   Gauge,
   ListChecks,
   Network,
@@ -199,6 +200,13 @@ export function DeviceDetailPage() {
           <Link className="device-tool-action" to="/tools/wake-on-lan">
             <span className="device-tool-icon"><Power size={18} aria-hidden="true" /></span>
             <span><strong>Wake-on-LAN</strong><small>Enter MAC and broadcast details</small></span>
+          </Link>
+          <Link
+            className="device-tool-action"
+            to={`/tools/config-backup?${createSearchParams({ ip: device.ipAddress })}`}
+          >
+            <span className="device-tool-icon"><DatabaseBackup size={18} aria-hidden="true" /></span>
+            <span><strong>Config Backup</strong><small>Retrieve running configuration</small></span>
           </Link>
         </div>
       </section>

@@ -106,6 +106,24 @@ export interface PortScanResponse {
   results: PortScanResult[]
 }
 
+export type ConfigBackupVendor = 'CiscoIos'
+
+export interface ConfigBackupRequest {
+  ipAddress: string
+  port: number
+  username: string
+  password: string
+  vendor: ConfigBackupVendor
+}
+
+export interface ConfigBackupResponse {
+  ipAddress: string
+  vendor: ConfigBackupVendor
+  configuration: string
+  capturedAt: string
+  suggestedFileName: string
+}
+
 export interface SnmpConnectionRequest {
   ipAddress: string
   community: string

@@ -392,6 +392,11 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
 .query-mode-switch { display: flex; height: 40px; padding: 3px; border: 1px solid #273950; border-radius: 8px; background: #09131f; }
 .query-mode-switch button { min-width: 62px; color: #687a91; border: 0; border-radius: 5px; background: transparent; font-size: 10px; font-weight: 750; }
 .query-mode-switch button.active { color: #dffcff; background: var(--cyan-soft); }
+.credential-source-field { display: flex; flex-direction: column; gap: 6px; color: #9dacbf; font-size: 11px; font-weight: 650; }
+.credential-source-field .query-mode-switch { width: fit-content; }
+.credential-source-field select { min-width: 220px; height: 40px; padding: 0 11px; color: var(--text-strong); border: 1px solid #273950; border-radius: 8px; outline: 0; background: #09131f; }
+.credential-source-field small { color: var(--text-muted); font-weight: 500; }
+.credential-source-field .field-error { color: var(--red); }
 .snmp-single-result { display: grid; grid-template-columns: minmax(180px, auto) auto 1fr; align-items: center; gap: 17px; min-height: 92px; padding: 22px; }
 .snmp-single-result small { color: var(--cyan); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; }
 .snmp-single-result strong { overflow-wrap: anywhere; color: #c0cbd8; font-size: 12px; font-weight: 550; }

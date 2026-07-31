@@ -8,6 +8,7 @@ namespace NetworkMonitor.Api.Controllers;
 [Route("api/tools/snmp")]
 public sealed class SnmpController(
     ISnmpService snmpService,
+    INetworkOperationCredentialResolver credentialResolver,
     ILogger<SnmpController> logger) : ControllerBase
 {
     [HttpPost("system-info")]
@@ -16,9 +17,9 @@ public sealed class SnmpController(
         CancellationToken cancellationToken)
     {
         return Execute(
-            () => snmpService.GetSystemInfoAsync(
+            async () => await snmpService.GetSystemInfoAsync(
                 request.IpAddress,
-                request.Community,
+                await credentialResolver.ResolveSnmpCommunityAsync(request.Community, request.CredentialId, cancellationToken),
                 request.TimeoutMilliseconds,
                 cancellationToken));
     }
@@ -29,9 +30,9 @@ public sealed class SnmpController(
         CancellationToken cancellationToken)
     {
         return Execute(
-            () => snmpService.GetAsync(
+            async () => await snmpService.GetAsync(
                 request.IpAddress,
-                request.Community,
+                await credentialResolver.ResolveSnmpCommunityAsync(request.Community, request.CredentialId, cancellationToken),
                 request.Oid,
                 request.TimeoutMilliseconds,
                 cancellationToken));
@@ -43,9 +44,9 @@ public sealed class SnmpController(
         CancellationToken cancellationToken)
     {
         return Execute(
-            () => snmpService.WalkAsync(
+            async () => await snmpService.WalkAsync(
                 request.IpAddress,
-                request.Community,
+                await credentialResolver.ResolveSnmpCommunityAsync(request.Community, request.CredentialId, cancellationToken),
                 request.RootOid,
                 request.TimeoutMilliseconds,
                 cancellationToken));
@@ -57,9 +58,9 @@ public sealed class SnmpController(
         CancellationToken cancellationToken)
     {
         return Execute(
-            () => snmpService.GetInterfacesAsync(
+            async () => await snmpService.GetInterfacesAsync(
                 request.IpAddress,
-                request.Community,
+                await credentialResolver.ResolveSnmpCommunityAsync(request.Community, request.CredentialId, cancellationToken),
                 request.TimeoutMilliseconds,
                 cancellationToken));
     }
@@ -75,6 +76,13 @@ public sealed class SnmpController(
             return BadRequest(CreateProblem(
                 StatusCodes.Status400BadRequest,
                 "Invalid SNMP request",
+                exception.Message));
+        }
+        catch (NetworkOperationCredentialException exception)
+        {
+            return BadRequest(CreateProblem(
+                StatusCodes.Status400BadRequest,
+                "Invalid SNMP credential",
                 exception.Message));
         }
         catch (SnmpOperationException exception)

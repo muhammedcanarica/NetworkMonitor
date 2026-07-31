@@ -9,14 +9,15 @@ public sealed class TopologyDiscoveryRequest
     [MinLength(1)]
     public IReadOnlyList<int> DeviceIds { get; init; } = [];
 
-    [Required(AllowEmptyStrings = false)]
     [StringLength(255, MinimumLength = 1)]
-    public string Community { get; init; } = string.Empty;
+    public string? Community { get; init; }
+
+    public int? CredentialId { get; init; }
 
     [Range(SnmpServiceTimeouts.MinimumMilliseconds, SnmpServiceTimeouts.MaximumMilliseconds)]
     public int TimeoutMilliseconds { get; init; } = 2000;
 
-    public override string ToString() => $"Topology discovery for {DeviceIds.Count} devices, community [REDACTED], timeout {TimeoutMilliseconds} ms";
+    public override string ToString() => $"Topology discovery for {DeviceIds.Count} devices, credential source {(CredentialId.HasValue ? "saved" : "manual")}, timeout {TimeoutMilliseconds} ms";
 }
 
 public sealed record TopologyNodeResponse(

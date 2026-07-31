@@ -6,7 +6,9 @@ namespace NetworkMonitor.Api.Controllers;
 
 [ApiController]
 [Route("api/topology")]
-public sealed class TopologyController(ITopologyDiscoveryService topologyDiscoveryService) : ControllerBase
+public sealed class TopologyController(
+    ITopologyDiscoveryService topologyDiscoveryService,
+    INetworkOperationCredentialResolver credentialResolver) : ControllerBase
 {
     [HttpPost("discover")]
     [ProducesResponseType<TopologyDiscoveryResponse>(StatusCodes.Status200OK)]
@@ -17,7 +19,26 @@ public sealed class TopologyController(ITopologyDiscoveryService topologyDiscove
     {
         try
         {
-            return Ok(await topologyDiscoveryService.DiscoverAsync(request, cancellationToken));
+            var community = await credentialResolver.ResolveSnmpCommunityAsync(
+                request.Community,
+                request.CredentialId,
+                cancellationToken);
+            var resolvedRequest = new TopologyDiscoveryRequest
+            {
+                DeviceIds = request.DeviceIds,
+                Community = community,
+                TimeoutMilliseconds = request.TimeoutMilliseconds
+            };
+            return Ok(await topologyDiscoveryService.DiscoverAsync(resolvedRequest, cancellationToken));
+        }
+        catch (NetworkOperationCredentialException exception)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Invalid SNMP credential",
+                Detail = exception.Message
+            });
         }
         catch (TopologyDiscoveryValidationException exception)
         {

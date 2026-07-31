@@ -111,8 +111,9 @@ export type ConfigBackupVendor = 'CiscoIos'
 export interface ConfigBackupRequest {
   ipAddress: string
   port: number
-  username: string
-  password: string
+  username: string | null
+  password: string | null
+  credentialId: number | null
   vendor: ConfigBackupVendor
 }
 
@@ -174,7 +175,8 @@ export interface ConfigBackupComparison {
 
 export interface SnmpConnectionRequest {
   ipAddress: string
-  community: string
+  community: string | null
+  credentialId: number | null
   timeoutMilliseconds: number
 }
 
@@ -210,7 +212,8 @@ export interface SnmpInterface {
 
 export interface TopologyDiscoveryRequest {
   deviceIds: number[]
-  community: string
+  community: string | null
+  credentialId: number | null
   timeoutMilliseconds: number
 }
 

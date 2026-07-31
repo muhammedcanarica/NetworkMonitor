@@ -11,15 +11,17 @@ public sealed class ConfigBackupRequest
 
     public int Port { get; init; } = 22;
 
-    public string Username { get; init; } = string.Empty;
+    public string? Username { get; init; }
 
-    public string Password { get; init; } = string.Empty;
+    public string? Password { get; init; }
+
+    public int? CredentialId { get; init; }
 
     public ConfigBackupVendor Vendor { get; init; } = ConfigBackupVendor.CiscoIos;
 
     public override string ToString()
     {
-        return $"ConfigBackupRequest {{ IpAddress = {IpAddress}, Port = {Port}, Username = [REDACTED], Password = [REDACTED], Vendor = {Vendor} }}";
+        return $"ConfigBackupRequest {{ IpAddress = {IpAddress}, Port = {Port}, CredentialSource = {(CredentialId.HasValue ? "Saved" : "Manual")}, Vendor = {Vendor} }}";
     }
 }
 

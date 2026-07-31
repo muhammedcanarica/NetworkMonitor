@@ -3,11 +3,42 @@ using Microsoft.AspNetCore.Mvc;
 using NetworkMonitor.Api.Controllers;
 using NetworkMonitor.Api.Dtos;
 using NetworkMonitor.Api.Services;
+using NetworkMonitor.Api.Tests.Infrastructure;
 
 namespace NetworkMonitor.Api.Tests.Controllers;
 
 public sealed class ConfigBackupControllerTests
 {
+    [Fact]
+    public async Task GetRunningConfiguration_UsesResolvedSavedSshCredentialWithoutReturningPassword()
+    {
+        const string password = "stored-password";
+        var response = new ConfigBackupResponse("192.168.1.10", ConfigBackupVendor.CiscoIos, "hostname core", DateTimeOffset.UtcNow, "config.txt");
+        var service = new StubConfigBackupService((request, _) =>
+        {
+            Assert.Equal("saved-operator", request.Username);
+            Assert.Equal(password, request.Password);
+            Assert.Null(request.CredentialId);
+            return Task.FromResult(response);
+        });
+        var resolver = new StubNetworkOperationCredentialResolver
+        {
+            SshHandler = (username, suppliedPassword, credentialId, _) =>
+            {
+                Assert.Null(username);
+                Assert.Null(suppliedPassword);
+                Assert.Equal(12, credentialId);
+                return Task.FromResult(new SshCredential("saved-operator", password));
+            }
+        };
+        var controller = new ConfigBackupController(service, new StubConfigBackupStorageService(), resolver);
+
+        var action = await controller.GetRunningConfiguration(new ConfigBackupRequest { IpAddress = "192.168.1.10", CredentialId = 12 }, CancellationToken.None);
+
+        var result = Assert.IsType<OkObjectResult>(action.Result);
+        Assert.DoesNotContain(password, result.Value!.ToString(), StringComparison.Ordinal);
+    }
+
     [Fact]
     public async Task GetRunningConfiguration_ReturnsBackupResponse()
     {
@@ -19,7 +50,8 @@ public sealed class ConfigBackupControllerTests
             "192.168.1.10-running-config-2026-07-31.txt");
         var controller = new ConfigBackupController(
             new StubConfigBackupService((_, _) => Task.FromResult(response)),
-            new StubConfigBackupStorageService());
+            new StubConfigBackupStorageService(),
+            new StubNetworkOperationCredentialResolver());
 
         var action = await controller.GetRunningConfiguration(CreateRequest(), CancellationToken.None);
 
@@ -32,7 +64,8 @@ public sealed class ConfigBackupControllerTests
     {
         var controller = new ConfigBackupController(
             new StubConfigBackupService((_, _) => throw new ConfigBackupValidationException("Invalid IP address.")),
-            new StubConfigBackupStorageService());
+            new StubConfigBackupStorageService(),
+            new StubNetworkOperationCredentialResolver());
 
         var action = await controller.GetRunningConfiguration(CreateRequest(), CancellationToken.None);
 
@@ -51,7 +84,8 @@ public sealed class ConfigBackupControllerTests
     {
         var controller = new ConfigBackupController(
             new StubConfigBackupService((_, _) => throw new ConfigBackupOperationException(kind, "Safe error message.")),
-            new StubConfigBackupStorageService());
+            new StubConfigBackupStorageService(),
+            new StubNetworkOperationCredentialResolver());
 
         var action = await controller.GetRunningConfiguration(CreateRequest(), CancellationToken.None);
 
@@ -74,7 +108,8 @@ public sealed class ConfigBackupControllerTests
         };
         var controller = new ConfigBackupController(
             new StubConfigBackupService((_, _) => throw new NotImplementedException()),
-            new StubConfigBackupStorageService(exception));
+            new StubConfigBackupStorageService(exception),
+            new StubNetworkOperationCredentialResolver());
 
         var action = await controller.Save(new SaveConfigBackupRequest(), CancellationToken.None);
 

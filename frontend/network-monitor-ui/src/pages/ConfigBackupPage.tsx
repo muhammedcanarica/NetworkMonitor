@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { DatabaseBackup, Download, FileText, LoaderCircle, ShieldCheck, X } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { configBackupApi, configBackupsApi } from '../api/configBackup'
+import { CredentialSourceSelector, type CredentialSource } from '../components/credentials/CredentialSourceSelector'
 import { StatePanel } from '../components/ui/StatePanel'
 import type {
   ConfigBackupRequest,
@@ -53,6 +54,8 @@ export function ConfigBackupPage() {
     username: '',
     password: '',
   }))
+  const [credentialSource, setCredentialSource] = useState<CredentialSource>('manual')
+  const [credentialId, setCredentialId] = useState<number | null>(null)
   const [result, setResult] = useState<ConfigBackupResponse | null>(null)
   const [savedBackup, setSavedBackup] = useState<SaveConfigBackupResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -90,20 +93,25 @@ export function ConfigBackupPage() {
       setError('SSH port must be between 1 and 65535.')
       return null
     }
-    if (!form.username.trim()) {
+    if (credentialSource === 'manual' && !form.username.trim()) {
       setError('Username is required.')
       return null
     }
-    if (!form.password) {
+    if (credentialSource === 'manual' && !form.password) {
       setError('Password is required.')
+      return null
+    }
+    if (credentialSource === 'saved' && credentialId === null) {
+      setError('Select a saved SSH credential.')
       return null
     }
 
     return {
       ipAddress,
       port,
-      username: form.username.trim(),
-      password: form.password,
+      username: credentialSource === 'manual' ? form.username.trim() : null,
+      password: credentialSource === 'manual' ? form.password : null,
+      credentialId: credentialSource === 'saved' ? credentialId : null,
       vendor: 'CiscoIos',
     }
   }
@@ -180,12 +188,13 @@ export function ConfigBackupPage() {
         <header className="panel-header">
           <div>
             <h2>SSH connection</h2>
-            <p>Credentials are used only for this request and are never saved by NetScope.</p>
+            <p>Use one-time manual SSH details or a saved encrypted credential.</p>
           </div>
           <DatabaseBackup size={22} aria-hidden="true" />
         </header>
 
         <form className="config-backup-form" onSubmit={getConfiguration}>
+          <CredentialSourceSelector type="SshPassword" source={credentialSource} credentialId={credentialId} onSourceChange={setCredentialSource} onCredentialChange={setCredentialId} disabled={isLoading} />
           <label>
             Target IPv4
             <input value={form.ipAddress} onChange={(event) => updateField('ipAddress', event.target.value)} placeholder="192.168.1.10" disabled={isLoading} spellCheck="false" autoComplete="off" />
@@ -200,14 +209,14 @@ export function ConfigBackupPage() {
               <option value="CiscoIos">Cisco IOS / IOS-XE</option>
             </select>
           </label>
-          <label>
+          {credentialSource === 'manual' && <label>
             Username
             <input value={form.username} onChange={(event) => updateField('username', event.target.value)} disabled={isLoading} autoComplete="username" />
-          </label>
-          <label>
+          </label>}
+          {credentialSource === 'manual' && <label>
             Password
             <input type="password" value={form.password} onChange={(event) => updateField('password', event.target.value)} disabled={isLoading} autoComplete="current-password" />
-          </label>
+          </label>}
           <div className="config-backup-submit">
             <button className="button primary" type="submit" disabled={isLoading || isSaving}>
               {isLoading ? <LoaderCircle className="spin" size={16} /> : <DatabaseBackup size={16} />}
@@ -218,7 +227,7 @@ export function ConfigBackupPage() {
 
         <div className="config-backup-security-note">
           <ShieldCheck size={17} aria-hidden="true" />
-          <span><strong>Read-only scope:</strong> NetScope sends only the Cisco <code>show running-config</code> command. Configuration is not written to the device or server filesystem, and is stored only when you explicitly choose Save Backup.</span>
+          <span><strong>Read-only scope:</strong> NetScope sends only the Cisco <code>show running-config</code> command. Saved secrets are resolved only by the server and never returned. Configuration is stored only when you explicitly choose Save Backup.</span>
         </div>
       </section>
 

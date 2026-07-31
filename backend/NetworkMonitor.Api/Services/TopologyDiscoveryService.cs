@@ -21,6 +21,7 @@ public sealed class TopologyDiscoveryService(
         CancellationToken cancellationToken)
     {
         ValidateRequest(request);
+        var community = request.Community!;
         var deviceIds = request.DeviceIds.Distinct().ToArray();
         var allManagedDevices = await dbContext.Devices
             .AsNoTracking()
@@ -40,7 +41,7 @@ public sealed class TopologyDiscoveryService(
                 MaxDegreeOfParallelism = _options.MaxConcurrentDiscoveries,
                 CancellationToken = cancellationToken
             },
-            async (index, token) => discoveries[index] = await DiscoverDeviceAsync(devices[index], request, token));
+            async (index, token) => discoveries[index] = await DiscoverDeviceAsync(devices[index], request, community, token));
 
         var managedDevicesByIp = allManagedDevices.ToDictionary(device => device.IpAddress, StringComparer.Ordinal);
         var nodes = devices
@@ -87,16 +88,17 @@ public sealed class TopologyDiscoveryService(
     private async Task<DeviceDiscovery> DiscoverDeviceAsync(
         Device device,
         TopologyDiscoveryRequest request,
+        string community,
         CancellationToken cancellationToken)
     {
         try
         {
-            var localPortsTask = snmpService.WalkAsync(device.IpAddress, request.Community, SnmpOids.Lldp.LocalPortId, request.TimeoutMilliseconds, cancellationToken);
-            var chassisTask = snmpService.WalkAsync(device.IpAddress, request.Community, SnmpOids.Lldp.RemoteChassisId, request.TimeoutMilliseconds, cancellationToken);
-            var remotePortTask = snmpService.WalkAsync(device.IpAddress, request.Community, SnmpOids.Lldp.RemotePortId, request.TimeoutMilliseconds, cancellationToken);
-            var remotePortDescriptionTask = snmpService.WalkAsync(device.IpAddress, request.Community, SnmpOids.Lldp.RemotePortDescription, request.TimeoutMilliseconds, cancellationToken);
-            var systemNameTask = snmpService.WalkAsync(device.IpAddress, request.Community, SnmpOids.Lldp.RemoteSystemName, request.TimeoutMilliseconds, cancellationToken);
-            var managementAddressTask = snmpService.WalkAsync(device.IpAddress, request.Community, SnmpOids.Lldp.RemoteManagementAddress, request.TimeoutMilliseconds, cancellationToken);
+            var localPortsTask = snmpService.WalkAsync(device.IpAddress, community, SnmpOids.Lldp.LocalPortId, request.TimeoutMilliseconds, cancellationToken);
+            var chassisTask = snmpService.WalkAsync(device.IpAddress, community, SnmpOids.Lldp.RemoteChassisId, request.TimeoutMilliseconds, cancellationToken);
+            var remotePortTask = snmpService.WalkAsync(device.IpAddress, community, SnmpOids.Lldp.RemotePortId, request.TimeoutMilliseconds, cancellationToken);
+            var remotePortDescriptionTask = snmpService.WalkAsync(device.IpAddress, community, SnmpOids.Lldp.RemotePortDescription, request.TimeoutMilliseconds, cancellationToken);
+            var systemNameTask = snmpService.WalkAsync(device.IpAddress, community, SnmpOids.Lldp.RemoteSystemName, request.TimeoutMilliseconds, cancellationToken);
+            var managementAddressTask = snmpService.WalkAsync(device.IpAddress, community, SnmpOids.Lldp.RemoteManagementAddress, request.TimeoutMilliseconds, cancellationToken);
             await Task.WhenAll(localPortsTask, chassisTask, remotePortTask, remotePortDescriptionTask, systemNameTask, managementAddressTask);
 
             return new DeviceDiscovery(

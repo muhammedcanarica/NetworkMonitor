@@ -8,7 +8,8 @@ namespace NetworkMonitor.Api.Controllers;
 [Route("api/tools/config-backup")]
 public sealed class ConfigBackupController(
     IConfigBackupService configBackupService,
-    IConfigBackupStorageService configBackupStorageService) : ControllerBase
+    IConfigBackupStorageService configBackupStorageService,
+    INetworkOperationCredentialResolver credentialResolver) : ControllerBase
 {
     [HttpPost]
     [ProducesResponseType<ConfigBackupResponse>(StatusCodes.Status200OK)]
@@ -22,7 +23,27 @@ public sealed class ConfigBackupController(
     {
         try
         {
-            return Ok(await configBackupService.GetRunningConfigurationAsync(request, cancellationToken));
+            var credential = await credentialResolver.ResolveSshCredentialAsync(
+                request.Username,
+                request.Password,
+                request.CredentialId,
+                cancellationToken);
+            var resolvedRequest = new ConfigBackupRequest
+            {
+                IpAddress = request.IpAddress,
+                Port = request.Port,
+                Username = credential.Username,
+                Password = credential.Password,
+                Vendor = request.Vendor
+            };
+            return Ok(await configBackupService.GetRunningConfigurationAsync(resolvedRequest, cancellationToken));
+        }
+        catch (NetworkOperationCredentialException exception)
+        {
+            return BadRequest(CreateProblem(
+                StatusCodes.Status400BadRequest,
+                "Invalid SSH credential",
+                exception.Message));
         }
         catch (ConfigBackupValidationException exception)
         {

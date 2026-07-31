@@ -2,12 +2,62 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
 using NetworkMonitor.Api.Controllers;
 using NetworkMonitor.Api.Dtos;
+using NetworkMonitor.Api.Tests.Infrastructure;
 using NetworkMonitor.Api.Services;
 
 namespace NetworkMonitor.Api.Tests.Controllers;
 
 public sealed class SnmpControllerTests
 {
+    [Fact]
+    public async Task Get_ResolvesSavedCredentialWithoutReturningCommunity()
+    {
+        const string secret = "stored-community";
+        var service = new StubSnmpService
+        {
+            GetHandler = (_, community, oid, _, _) =>
+            {
+                Assert.Equal(secret, community);
+                return Task.FromResult(new SnmpValueResponse(oid, "router-1", "OctetString"));
+            }
+        };
+        var resolver = new StubNetworkOperationCredentialResolver
+        {
+            SnmpHandler = (community, credentialId, _) =>
+            {
+                Assert.Null(community);
+                Assert.Equal(7, credentialId);
+                return Task.FromResult(secret);
+            }
+        };
+        var controller = new SnmpController(service, resolver, NullLogger<SnmpController>.Instance);
+
+        var action = await controller.Get(new SnmpGetRequest
+        {
+            IpAddress = "192.0.2.10",
+            CredentialId = 7,
+            Oid = "1.3.6.1.2.1.1.5.0"
+        }, CancellationToken.None);
+
+        var result = Assert.IsType<OkObjectResult>(action.Result);
+        Assert.DoesNotContain(secret, result.Value!.ToString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Get_MapsCredentialFailureToBadRequest()
+    {
+        var resolver = new StubNetworkOperationCredentialResolver
+        {
+            SnmpHandler = (_, _, _) => throw new NetworkOperationCredentialException("Saved credential could not be used.")
+        };
+        var controller = new SnmpController(new StubSnmpService(), resolver, NullLogger<SnmpController>.Instance);
+
+        var action = await controller.Get(new SnmpGetRequest { IpAddress = "192.0.2.10", CredentialId = 99, Oid = "1.3" }, CancellationToken.None);
+
+        var result = Assert.IsType<BadRequestObjectResult>(action.Result);
+        Assert.Equal("Saved credential could not be used.", Assert.IsType<ProblemDetails>(result.Value).Detail);
+    }
+
     [Fact]
     public async Task Get_MapsTimeoutToGatewayTimeoutWithoutRawDetails()
     {
@@ -18,7 +68,7 @@ public sealed class SnmpControllerTests
                 "The SNMP request timed out.",
                 new InvalidOperationException("raw transport details"))
         };
-        var controller = new SnmpController(service, NullLogger<SnmpController>.Instance);
+        var controller = new SnmpController(service, new StubNetworkOperationCredentialResolver(), NullLogger<SnmpController>.Instance);
 
         var action = await controller.Get(new SnmpGetRequest
         {

@@ -11,6 +11,7 @@ import {
 import { devicesApi } from '../api/devices'
 import { useSearchParams } from 'react-router-dom'
 import { snmpApi } from '../api/snmp'
+import { CredentialSourceSelector, type CredentialSource } from '../components/credentials/CredentialSourceSelector'
 import { StatePanel } from '../components/ui/StatePanel'
 import type {
   Device,
@@ -75,6 +76,8 @@ export function SnmpExplorerPage() {
     community: '',
     timeoutMilliseconds: '2000',
   })
+  const [credentialSource, setCredentialSource] = useState<CredentialSource>('manual')
+  const [credentialId, setCredentialId] = useState<number | null>(null)
   const [operation, setOperation] = useState<Operation | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -112,8 +115,12 @@ export function SnmpExplorerPage() {
       setError('Enter a target IPv4 or IPv6 address.')
       return null
     }
-    if (!connection.community.trim()) {
+    if (credentialSource === 'manual' && !connection.community.trim()) {
       setError('Community is required.')
+      return null
+    }
+    if (credentialSource === 'saved' && credentialId === null) {
+      setError('Select a saved SNMP credential.')
       return null
     }
     if (!Number.isInteger(timeout) || timeout < 500 || timeout > 10000) {
@@ -123,7 +130,8 @@ export function SnmpExplorerPage() {
 
     return {
       ipAddress: connection.ipAddress.trim(),
-      community: connection.community,
+      community: credentialSource === 'manual' ? connection.community : null,
+      credentialId: credentialSource === 'saved' ? credentialId : null,
       timeoutMilliseconds: timeout,
     }
   }
@@ -215,12 +223,20 @@ export function SnmpExplorerPage() {
         <header className="panel-header">
           <div>
             <h2>SNMP connection</h2>
-            <p>Credentials stay in this page only and are never persisted.</p>
+            <p>Use a one-time manual community or a saved encrypted credential.</p>
           </div>
           <span className="protocol-badge">SNMP v2c · READ ONLY</span>
         </header>
 
         <div className="snmp-connection-grid">
+          <CredentialSourceSelector
+            type="SnmpV2Community"
+            source={credentialSource}
+            credentialId={credentialId}
+            onSourceChange={setCredentialSource}
+            onCredentialChange={setCredentialId}
+            disabled={isBusy}
+          />
           <label>
             Inventory device <span className="optional">Optional</span>
             <select value="" onChange={(event) => selectDevice(event.target.value)} disabled={isBusy}>
@@ -241,18 +257,20 @@ export function SnmpExplorerPage() {
               spellCheck="false"
             />
           </label>
-          <label>
-            Community
-            <input
-              required
-              type="password"
-              value={connection.community}
-              onChange={(event) => setConnection({ ...connection, community: event.target.value })}
-              placeholder="Enter community"
-              disabled={isBusy}
-              autoComplete="new-password"
-            />
-          </label>
+          {credentialSource === 'manual' && (
+            <label>
+              Community
+              <input
+                required
+                type="password"
+                value={connection.community}
+                onChange={(event) => setConnection({ ...connection, community: event.target.value })}
+                placeholder="Enter community"
+                disabled={isBusy}
+                autoComplete="new-password"
+              />
+            </label>
+          )}
           <label>
             Timeout (ms)
             <input

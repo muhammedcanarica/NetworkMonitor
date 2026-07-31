@@ -118,6 +118,7 @@ builder.Services.AddScoped<IConfigBackupStorageService, ConfigBackupStorageServi
 builder.Services.AddScoped<IIncidentService, IncidentService>();
 builder.Services.AddSingleton<ISecretProtector, DataProtectionSecretProtector>();
 builder.Services.AddScoped<INetworkCredentialService, NetworkCredentialService>();
+builder.Services.AddScoped<INetworkOperationCredentialResolver, NetworkOperationCredentialResolver>();
 builder.Services.AddSingleton<IWakeOnLanPacketSender, UdpWakeOnLanPacketSender>();
 builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
 builder.Services.AddSingleton<ISnmpTransport, SharpSnmpTransport>();

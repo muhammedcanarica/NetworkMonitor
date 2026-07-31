@@ -3,6 +3,7 @@ import { LoaderCircle, Network, ShieldCheck, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { devicesApi } from '../api/devices'
 import { topologyApi } from '../api/topology'
+import { CredentialSourceSelector, type CredentialSource } from '../components/credentials/CredentialSourceSelector'
 import { TopologyGraph } from '../components/topology/TopologyGraph'
 import { StatePanel } from '../components/ui/StatePanel'
 import type { Device, TopologyDiscoveryResponse } from '../types/api'
@@ -22,6 +23,8 @@ export function TopologyPage() {
   const [devices, setDevices] = useState<Device[]>([])
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [community, setCommunity] = useState('')
+  const [credentialSource, setCredentialSource] = useState<CredentialSource>('manual')
+  const [credentialId, setCredentialId] = useState<number | null>(null)
   const [timeoutMilliseconds, setTimeoutMilliseconds] = useState('2000')
   const [topology, setTopology] = useState<TopologyDiscoveryResponse | null>(null)
   const [isLoadingDevices, setIsLoadingDevices] = useState(true)
@@ -59,7 +62,8 @@ export function TopologyPage() {
     setNotice(null)
     const timeout = Number(timeoutMilliseconds)
     if (selectedIds.length === 0) return setError('Select at least one monitored device.')
-    if (!community.trim()) return setError('Enter the SNMP community for this one-time discovery.')
+    if (credentialSource === 'manual' && !community.trim()) return setError('Enter the SNMP community for this one-time discovery.')
+    if (credentialSource === 'saved' && credentialId === null) return setError('Select a saved SNMP credential.')
     if (!Number.isInteger(timeout) || timeout < 500 || timeout > 10000) return setError('Timeout must be between 500 and 10000 milliseconds.')
 
     const nextController = new AbortController()
@@ -67,7 +71,12 @@ export function TopologyPage() {
     setIsDiscovering(true)
     setTopology(null)
     try {
-      setTopology(await topologyApi.discover({ deviceIds: selectedIds, community: community.trim(), timeoutMilliseconds: timeout }, nextController.signal))
+      setTopology(await topologyApi.discover({
+        deviceIds: selectedIds,
+        community: credentialSource === 'manual' ? community.trim() : null,
+        credentialId: credentialSource === 'saved' ? credentialId : null,
+        timeoutMilliseconds: timeout,
+      }, nextController.signal))
     } catch (discoveryError) {
       if (isAbortError(discoveryError)) setNotice('Topology discovery cancelled.')
       else setError(getErrorMessage(discoveryError))
@@ -98,10 +107,11 @@ export function TopologyPage() {
         {isLoadingDevices ? <StatePanel type="loading" title="Loading monitored devices" message="Preparing the discovery selection…" /> : (
           <form onSubmit={discover}>
             <div className="topology-controls">
-              <label>
+              <CredentialSourceSelector type="SnmpV2Community" source={credentialSource} credentialId={credentialId} onSourceChange={setCredentialSource} onCredentialChange={setCredentialId} disabled={isDiscovering} />
+              {credentialSource === 'manual' && <label>
                 SNMP community
                 <input type="password" value={community} onChange={(event) => setCommunity(event.target.value)} autoComplete="off" placeholder="Entered only for this discovery" disabled={isDiscovering} />
-              </label>
+              </label>}
               <label>
                 Timeout (ms)
                 <input type="number" min={500} max={10000} step={100} value={timeoutMilliseconds} onChange={(event) => setTimeoutMilliseconds(event.target.value)} disabled={isDiscovering} />
@@ -122,7 +132,7 @@ export function TopologyPage() {
             </fieldset>
           </form>
         )}
-        <div className="topology-security-note"><ShieldCheck size={17} aria-hidden="true" /><span><strong>Security:</strong> SNMP community is used only for this request. It is not stored, included in the result, or placed in the URL.</span></div>
+        <div className="topology-security-note"><ShieldCheck size={17} aria-hidden="true" /><span><strong>Security:</strong> Manual communities are used only for this request. Saved secrets are resolved by the server and are never returned, included in results, or placed in the URL.</span></div>
       </section>
 
       {isDiscovering && <section className="panel"><StatePanel type="loading" title="Reading LLDP neighbors" message="Selected devices are queried with bounded concurrency; unavailable devices may return as warnings." action={<button className="button secondary" type="button" onClick={() => controller.current?.abort()}><X size={15} /> Cancel</button>} /></section>}

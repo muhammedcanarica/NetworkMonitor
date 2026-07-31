@@ -8,16 +8,17 @@ public abstract class SnmpRequestBase
     [ValidIpAddress]
     public string IpAddress { get; init; } = string.Empty;
 
-    [Required(AllowEmptyStrings = false)]
     [StringLength(255, MinimumLength = 1)]
-    public string Community { get; init; } = string.Empty;
+    public string? Community { get; init; }
+
+    public int? CredentialId { get; init; }
 
     [Range(500, 10000)]
     public int TimeoutMilliseconds { get; init; } = 2000;
 
     public override string ToString()
     {
-        return $"{GetType().Name} for {IpAddress}, community [REDACTED], timeout {TimeoutMilliseconds} ms";
+        return $"{GetType().Name} for {IpAddress}, credential source {(CredentialId.HasValue ? "saved" : "manual")}, timeout {TimeoutMilliseconds} ms";
     }
 }
 

@@ -59,11 +59,15 @@ export async function apiRequest<T>(
   options: RequestInit = {},
 ): Promise<T> {
   try {
+    const method = (options.method ?? 'GET').toUpperCase()
+    const csrfToken = ['GET', 'HEAD', 'OPTIONS'].includes(method) ? null : await getCsrfToken()
     const response = await fetch(`${API_BASE_URL}${path}`, {
       ...options,
+      credentials: 'include',
       headers: {
         Accept: 'application/json',
         ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+        ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
         ...options.headers,
       },
     })
@@ -85,4 +89,14 @@ export async function apiRequest<T>(
       0,
     )
   }
+}
+
+let csrfToken: string | null = null
+export function resetCsrfToken() { csrfToken = null }
+async function getCsrfToken() {
+  if (csrfToken) return csrfToken
+  const response = await fetch(`${API_BASE_URL}/api/security/csrf`, { credentials: 'include' })
+  if (!response.ok) throw await parseError(response)
+  csrfToken = ((await response.json()) as { token: string }).token
+  return csrfToken
 }

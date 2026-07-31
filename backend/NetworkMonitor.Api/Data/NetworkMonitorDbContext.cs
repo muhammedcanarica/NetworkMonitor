@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using NetworkMonitor.Api.Models;
 
 namespace NetworkMonitor.Api.Data;
 
 public sealed class NetworkMonitorDbContext(DbContextOptions<NetworkMonitorDbContext> options)
-    : DbContext(options)
+    : IdentityDbContext<ApplicationUser>(options)
 {
     public DbSet<Device> Devices => Set<Device>();
 
@@ -12,9 +13,11 @@ public sealed class NetworkMonitorDbContext(DbContextOptions<NetworkMonitorDbCon
 
     public DbSet<ConfigBackup> ConfigBackups => Set<ConfigBackup>();
     public DbSet<Incident> Incidents => Set<Incident>();
+    public DbSet<NetworkCredential> NetworkCredentials => Set<NetworkCredential>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
         var device = modelBuilder.Entity<Device>();
 
         device.Property(item => item.Name)
@@ -117,5 +120,15 @@ public sealed class NetworkMonitorDbContext(DbContextOptions<NetworkMonitorDbCon
         incident.HasIndex(item => new { item.DeviceId, item.Status, item.StartedAt });
         incident.HasIndex(item => new { item.DeviceId, item.Type }).HasFilter("\"Status\" = 'Open'").IsUnique();
         incident.HasOne(item => item.Device).WithMany().HasForeignKey(item => item.DeviceId).OnDelete(DeleteBehavior.Cascade);
+
+        var credential = modelBuilder.Entity<NetworkCredential>();
+        credential.Property(item => item.Name).IsRequired().HasMaxLength(100);
+        credential.Property(item => item.Type).HasConversion<string>().HasMaxLength(32).IsRequired();
+        credential.Property(item => item.Username).HasMaxLength(100);
+        credential.Property(item => item.ProtectedSecret).IsRequired();
+        credential.Property(item => item.CreatedAt).HasConversion(value => value.ToUnixTimeMilliseconds(), value => DateTimeOffset.FromUnixTimeMilliseconds(value)).IsRequired();
+        credential.Property(item => item.UpdatedAt).HasConversion(value => value.ToUnixTimeMilliseconds(), value => DateTimeOffset.FromUnixTimeMilliseconds(value)).IsRequired();
+        credential.HasIndex(item => item.Name).IsUnique();
+        credential.HasOne(item => item.Device).WithMany().HasForeignKey(item => item.DeviceId).OnDelete(DeleteBehavior.SetNull);
     }
 }

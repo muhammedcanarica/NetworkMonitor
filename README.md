@@ -45,6 +45,18 @@ npm run dev
 
 Open `http://localhost:5173`.
 
+### Authentication bootstrap and encryption keys
+
+Set `NETSCOPE_ADMIN_USERNAME` and `NETSCOPE_ADMIN_PASSWORD` before the first API start. The account is created once through ASP.NET Core Identity; the password is hashed by Identity and is never stored in configuration.
+
+Network credentials are encrypted with ASP.NET Core Data Protection. Development keys default to `backend/NetworkMonitor.Api/.keys` (git-ignored). In production, set `NETSCOPE_KEY_RING_PATH` to a persistent directory protected by operating-system permissions and backups. Do not place the key ring in the SQLite database or publish it with the application. Losing these keys makes stored network credentials unrecoverable; disclosure of both the database and key ring permits decryption.
+
+```powershell
+$env:NETSCOPE_ADMIN_USERNAME = "admin"
+$env:NETSCOPE_ADMIN_PASSWORD = "use-a-unique-long-password"
+$env:NETSCOPE_KEY_RING_PATH = "C:\secure\netscope-keys"
+```
+
 ## Planned Features
 
 - Incident tracking

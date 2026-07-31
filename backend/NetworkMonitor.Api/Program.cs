@@ -1,8 +1,13 @@
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using NetworkMonitor.Api.Configuration;
 using NetworkMonitor.Api.Data;
 using NetworkMonitor.Api.Hubs;
+using NetworkMonitor.Api.Models;
 using NetworkMonitor.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,9 +17,35 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 var frontendOrigins = builder.Configuration
     .GetSection("Cors:AllowedOrigins")
     .Get<string[]>() ?? [];
+var keyRingPath = Environment.GetEnvironmentVariable("NETSCOPE_KEY_RING_PATH")
+    ?? Path.Combine(builder.Environment.ContentRootPath, ".keys");
+Directory.CreateDirectory(keyRingPath);
 
 builder.Services.AddDbContext<NetworkMonitorDbContext>(options =>
     options.UseSqlite(connectionString));
+builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(keyRingPath)).SetApplicationName("NetworkMonitor");
+builder.Services.AddIdentityCore<ApplicationUser>(options =>
+    {
+        options.Password.RequiredLength = 10;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Lockout.MaxFailedAccessAttempts = 5;
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
+    })
+    .AddEntityFrameworkStores<NetworkMonitorDbContext>()
+    .AddSignInManager();
+builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme).AddIdentityCookies();
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.Name = "NetScope.Auth";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Events.OnRedirectToLogin = context => { context.Response.StatusCode = 401; return Task.CompletedTask; };
+    options.Events.OnRedirectToAccessDenied = context => { context.Response.StatusCode = 403; return Task.CompletedTask; };
+});
+builder.Services.AddAuthorizationBuilder().SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
+builder.Services.AddAntiforgery(options => { options.HeaderName = "X-CSRF-TOKEN"; options.Cookie.Name = "NetScope.Csrf"; options.Cookie.HttpOnly = true; options.Cookie.SameSite = SameSiteMode.Lax; options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; });
+builder.Services.AddRateLimiter(options => options.AddPolicy("login", context => RateLimitPartition.GetFixedWindowLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions { PermitLimit = 5, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 })));
 builder.Services
     .AddOptions<MonitoringOptions>()
     .Bind(builder.Configuration.GetSection(MonitoringOptions.SectionName))
@@ -85,6 +116,8 @@ builder.Services.AddSingleton<IConfigBackupService, ConfigBackupService>();
 builder.Services.AddSingleton<IConfigDiffService, ConfigDiffService>();
 builder.Services.AddScoped<IConfigBackupStorageService, ConfigBackupStorageService>();
 builder.Services.AddScoped<IIncidentService, IncidentService>();
+builder.Services.AddSingleton<ISecretProtector, DataProtectionSecretProtector>();
+builder.Services.AddScoped<INetworkCredentialService, NetworkCredentialService>();
 builder.Services.AddSingleton<IWakeOnLanPacketSender, UdpWakeOnLanPacketSender>();
 builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
 builder.Services.AddSingleton<ISnmpTransport, SharpSnmpTransport>();
@@ -95,6 +128,7 @@ builder.Services.AddSingleton<IMonitoringUpdatePublisher, SignalRMonitoringUpdat
 builder.Services.AddHostedService<DeviceMonitoringService>();
 
 var app = builder.Build();
+await AdminBootstrapper.BootstrapAsync(app.Services);
 
 if (app.Environment.IsDevelopment())
 {
@@ -106,7 +140,28 @@ if (frontendOrigins.Length > 0)
 {
     app.UseCors("Frontend");
 }
+app.UseRateLimiter();
+app.UseAuthentication();
+app.UseAuthorization();
+app.Use(async (context, next) =>
+{
+    if (!HttpMethods.IsGet(context.Request.Method) && !HttpMethods.IsHead(context.Request.Method) && !HttpMethods.IsOptions(context.Request.Method))
+    {
+        try
+        {
+            await context.RequestServices.GetRequiredService<Microsoft.AspNetCore.Antiforgery.IAntiforgery>().ValidateRequestAsync(context);
+        }
+        catch (Microsoft.AspNetCore.Antiforgery.AntiforgeryValidationException)
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            return;
+        }
+    }
+    await next(context);
+});
 app.MapControllers();
 app.MapHub<MonitoringHub>("/hubs/monitoring");
 
 app.Run();
+
+public partial class Program;

@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AppLayout } from './components/layout/AppLayout'
 import { DevicesPage } from './pages/DevicesPage'
 import { ConfigBackupPage } from './pages/ConfigBackupPage'
@@ -14,6 +14,9 @@ import { TopologyPage } from './pages/TopologyPage'
 import { IncidentsPage } from './pages/IncidentsPage'
 import { RealtimeProvider } from './realtime/RealtimeProvider'
 import './App.css'
+import { AuthProvider, useAuth } from './auth/AuthContext'
+import { LoginPage } from './pages/LoginPage'
+import { CredentialsPage } from './pages/CredentialsPage'
 
 const DeviceDetailPage = lazy(() =>
   import('./pages/DeviceDetailPage').then((module) => ({
@@ -23,14 +26,15 @@ const DeviceDetailPage = lazy(() =>
 
 function App() {
   return (
-    <RealtimeProvider>
-      <BrowserRouter>
+    <BrowserRouter><AuthProvider>
         <Routes>
-          <Route element={<AppLayout />}>
+          <Route path="login" element={<LoginPage />} />
+          <Route element={<ProtectedLayout />}>
             <Route index element={<OverviewPage />} />
             <Route path="devices" element={<DevicesPage />} />
             <Route path="topology" element={<TopologyPage />} />
             <Route path="incidents" element={<IncidentsPage />} />
+            <Route path="settings/credentials" element={<CredentialsPage />} />
             <Route path="tools/ip-scanner" element={<IpScannerPage />} />
             <Route path="tools/config-backup" element={<ConfigBackupPage />} />
             <Route path="tools/config-backup/history" element={<ConfigBackupHistoryPage />} />
@@ -48,9 +52,15 @@ function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
-      </BrowserRouter>
-    </RealtimeProvider>
+    </AuthProvider></BrowserRouter>
   )
+}
+
+function ProtectedLayout() {
+  const { user, loading } = useAuth(); const location = useLocation()
+  if (loading) return <div className="route-loading">Checking authentication…</div>
+  if (!user) return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />
+  return <RealtimeProvider><AppLayout /></RealtimeProvider>
 }
 
 export default App

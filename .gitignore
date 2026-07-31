@@ -28,4 +28,5 @@ Thumbs.db
 # Local databases
 *.db
 *.db-shm
+backend/NetworkMonitor.Api/.keys/
 *.db-wal

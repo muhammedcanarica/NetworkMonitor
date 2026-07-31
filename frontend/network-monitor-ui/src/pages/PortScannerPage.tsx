@@ -4,8 +4,8 @@ import { useSearchParams } from 'react-router-dom'
 import { portScannerApi } from '../api/portScanner'
 import { StatePanel } from '../components/ui/StatePanel'
 import type { PortScanRequest, PortScanResponse, PortState } from '../types/api'
+import { COMMON_TCP_PORTS } from '../utils/commonPorts'
 
-const COMMON_PORTS = [20, 21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 1433, 3306, 3389, 5432, 5900, 8080]
 const MAX_PORTS = 256
 
 type Preset = 'common' | 'custom'
@@ -60,7 +60,7 @@ export function PortScannerPage() {
   const [searchParams] = useSearchParams()
   const [ipAddress, setIpAddress] = useState(() => searchParams.get('ip')?.trim() ?? '')
   const [preset, setPreset] = useState<Preset>('common')
-  const [portsInput, setPortsInput] = useState(COMMON_PORTS.join(','))
+  const [portsInput, setPortsInput] = useState(COMMON_TCP_PORTS.join(','))
   const [timeoutMilliseconds, setTimeoutMilliseconds] = useState('1000')
   const [result, setResult] = useState<PortScanResponse | null>(null)
   const [filter, setFilter] = useState<ResultFilter>('All')
@@ -81,7 +81,7 @@ export function PortScannerPage() {
 
   const selectPreset = (nextPreset: Preset) => {
     setPreset(nextPreset)
-    if (nextPreset === 'common') setPortsInput(COMMON_PORTS.join(','))
+    if (nextPreset === 'common') setPortsInput(COMMON_TCP_PORTS.join(','))
   }
 
   const createRequest = (): PortScanRequest | null => {
@@ -158,7 +158,7 @@ export function PortScannerPage() {
           <label>
             Port preset
             <select value={preset} onChange={(event) => selectPreset(event.target.value as Preset)} disabled={isScanning}>
-              <option value="common">Common ports ({COMMON_PORTS.length})</option>
+              <option value="common">Common ports ({COMMON_TCP_PORTS.length})</option>
               <option value="custom">Custom port list</option>
             </select>
           </label>

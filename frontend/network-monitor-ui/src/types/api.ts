@@ -257,3 +257,7 @@ export interface Incident {
   resolvedAt: string | null
   durationSeconds: number
 }
+
+export interface CurrentUser { username: string }
+export type NetworkCredentialType = 'SnmpV2Community' | 'SshPassword'
+export interface NetworkCredential { id: number; name: string; type: NetworkCredentialType; username: string | null; deviceId: number | null; createdAt: string; updatedAt: string; hasSecret: boolean }

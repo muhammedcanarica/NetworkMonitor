@@ -9,11 +9,16 @@ import {
   Radar,
   Server,
   Share2,
+  KeyRound,
+  LogOut,
 } from 'lucide-react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { ConnectionIndicator } from '../realtime/ConnectionIndicator'
+import { useAuth } from '../../auth/AuthContext'
 
 export function AppLayout() {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -67,10 +72,13 @@ export function AppLayout() {
             <DatabaseBackup size={18} aria-hidden="true" />
             Config Backup
           </NavLink>
+          <span className="nav-section-label tools-label">Settings</span>
+          <NavLink to="/settings/credentials"><KeyRound size={18} aria-hidden="true" />Credentials</NavLink>
         </nav>
 
         <div className="sidebar-footer">
           <ConnectionIndicator />
+          <div className="sidebar-user"><span>{user?.username}</span><button type="button" title="Sign out" onClick={() => void logout().then(() => navigate('/login'))}><LogOut size={15} /></button></div>
         </div>
       </aside>
 

@@ -26,6 +26,9 @@ import {
 } from 'recharts'
 import { devicesApi } from '../api/devices'
 import { incidentsApi } from '../api/incidents'
+import { DeviceConfigSummary } from '../components/device-detail/DeviceConfigSummary'
+import { DevicePortSnapshot } from '../components/device-detail/DevicePortSnapshot'
+import { DeviceSnmpPanel } from '../components/device-detail/DeviceSnmpPanel'
 import { ConnectionIndicator } from '../components/realtime/ConnectionIndicator'
 import { MetricCard } from '../components/ui/MetricCard'
 import { StatePanel } from '../components/ui/StatePanel'
@@ -180,6 +183,11 @@ export function DeviceDetailPage() {
         <div><span>Current latency</span><strong>{formatLatency(device.lastLatencyMs)}</strong></div>
       </section>
 
+      <section className="panel device-health-panel">
+        <header className="panel-header"><div><h2>Device health</h2><p>Current state and reliable 24-hour monitoring summary.</p></div><StatusBadge status={device.status} /></header>
+        <div className="device-health-summary"><div><span>24h success rate</span><strong>{formatPercentage(summary.uptimePercentage)}</strong></div><div><span>Last latency</span><strong>{formatLatency(device.lastLatencyMs)}</strong></div><div><span>Monitoring</span><strong>{device.isMonitoringEnabled ? 'Enabled' : 'Disabled'}</strong></div></div>
+      </section>
+
       <section className="panel device-tools-panel">
         <header className="panel-header">
           <div>
@@ -207,6 +215,10 @@ export function DeviceDetailPage() {
             <span className="device-tool-icon"><Power size={18} aria-hidden="true" /></span>
             <span><strong>Wake-on-LAN</strong><small>Enter MAC and broadcast details</small></span>
           </Link>
+          <Link className="device-tool-action" to="/topology">
+            <span className="device-tool-icon"><Network size={18} aria-hidden="true" /></span>
+            <span><strong>Topology</strong><small>Open LLDP topology discovery</small></span>
+          </Link>
           <Link
             className="device-tool-action"
             to={`/tools/config-backup?${createSearchParams({ ip: device.ipAddress, deviceId: String(device.id) })}`}
@@ -219,7 +231,7 @@ export function DeviceDetailPage() {
 
       <section className="panel device-incidents-panel">
         <header className="panel-header">
-          <div><h2>Incidents</h2><p>Latest confirmed monitoring outages for this device.</p></div>
+          <div><h2>Incidents</h2><p>{incidents.filter((incident) => incident.status === 'Open').length} active · latest confirmed monitoring outages.</p></div>
           <span className="device-tools-header-action"><Link className="button secondary compact-button" to="/incidents">All incidents</Link><BellRing size={19} aria-hidden="true" /></span>
         </header>
         {incidents.length === 0 ? (
@@ -233,6 +245,12 @@ export function DeviceDetailPage() {
           ))}</div>
         )}
       </section>
+
+      <section className="device-intelligence-grid">
+        <DeviceConfigSummary deviceId={device.id} ipAddress={device.ipAddress} />
+        <DevicePortSnapshot ipAddress={device.ipAddress} />
+      </section>
+      <DeviceSnmpPanel ipAddress={device.ipAddress} />
 
       <section className="metrics-grid detail-metrics" aria-label="24 hour monitoring summary">
         <MetricCard label="24h uptime" value={formatPercentage(summary.uptimePercentage)} hint={`${summary.successfulChecks} successful checks`} icon={Activity} tone="up" />

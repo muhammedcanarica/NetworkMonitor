@@ -4,12 +4,15 @@ import {
   ArrowDownToLine,
   ArrowLeft,
   ArrowUpToLine,
+  Cable,
   Clock3,
   Gauge,
   ListChecks,
+  Network,
+  Power,
   XCircle,
 } from 'lucide-react'
-import { Link, useParams } from 'react-router-dom'
+import { createSearchParams, Link, useParams } from 'react-router-dom'
 import {
   CartesianGrid,
   Line,
@@ -168,6 +171,36 @@ export function DeviceDetailPage() {
         <div><span>Last checked</span><strong title={formatLocalDateTime(device.lastCheckedAt)}>{formatRelativeTime(device.lastCheckedAt)}</strong></div>
         <div><span>Last seen</span><strong title={formatLocalDateTime(device.lastSeenAt)}>{formatRelativeTime(device.lastSeenAt)}</strong></div>
         <div><span>Current latency</span><strong>{formatLatency(device.lastLatencyMs)}</strong></div>
+      </section>
+
+      <section className="panel device-tools-panel">
+        <header className="panel-header">
+          <div>
+            <h2>Quick actions</h2>
+            <p>Open a network tool with this device selected. No scan or query starts automatically.</p>
+          </div>
+          <Network size={19} aria-hidden="true" />
+        </header>
+        <div className="device-tools-grid">
+          <Link
+            className="device-tool-action"
+            to={`/tools/port-scanner?${createSearchParams({ ip: device.ipAddress })}`}
+          >
+            <span className="device-tool-icon"><Cable size={18} aria-hidden="true" /></span>
+            <span><strong>Scan Ports</strong><small>Check selected TCP ports</small></span>
+          </Link>
+          <Link
+            className="device-tool-action"
+            to={`/tools/snmp?${createSearchParams({ ip: device.ipAddress })}`}
+          >
+            <span className="device-tool-icon"><Network size={18} aria-hidden="true" /></span>
+            <span><strong>SNMP Explorer</strong><small>Inspect SNMP data</small></span>
+          </Link>
+          <Link className="device-tool-action" to="/tools/wake-on-lan">
+            <span className="device-tool-icon"><Power size={18} aria-hidden="true" /></span>
+            <span><strong>Wake-on-LAN</strong><small>Enter MAC and broadcast details</small></span>
+          </Link>
+        </div>
       </section>
 
       <section className="metrics-grid detail-metrics" aria-label="24 hour monitoring summary">

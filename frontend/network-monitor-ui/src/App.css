@@ -352,6 +352,15 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
 .device-info-grid > div:last-child { border-right: 0; }
 .device-info-grid span { margin-bottom: 5px; color: #5e7087; font-size: 9px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; }
 .device-info-grid strong { overflow: hidden; color: #b4c1d0; font-size: 11px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.device-tools-panel > .panel-header > svg { color: var(--cyan); }
+.device-tools-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.device-tool-action { display: flex; align-items: center; gap: 12px; min-height: 92px; padding: 18px 20px; color: #9eacbd; border-right: 1px solid var(--border); text-decoration: none; transition: 150ms ease; }
+.device-tool-action:last-child { border-right: 0; }
+.device-tool-action:hover { color: var(--text-strong); background: rgba(255, 255, 255, 0.025); }
+.device-tool-icon { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; color: var(--cyan); border: 1px solid rgba(48, 199, 215, 0.22); border-radius: 9px; background: var(--cyan-soft); }
+.device-tool-action > span:last-child { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.device-tool-action strong { color: inherit; font-size: 12px; font-weight: 650; }
+.device-tool-action small { color: #61738a; font-size: 10px; }
 .detail-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 18px; }
 .chart-container { height: 310px; padding: 13px 6px 14px; }
 .compact-table { min-width: 760px; }
@@ -374,6 +383,7 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
   .device-info-grid > div { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
   .device-info-grid > div:nth-child(even) { border-right: 0; }
   .device-info-grid > div:last-child { grid-column: 1 / -1; border-right: 0; border-bottom: 0; }
+  .device-tools-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .snmp-connection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .wol-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .port-scan-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -397,6 +407,9 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
   .snmp-info-grid > div { border-right: 0; border-bottom: 1px solid var(--border) !important; }
   .snmp-info-grid > div:last-child { border-bottom: 0 !important; }
   .snmp-query-form { grid-template-columns: 1fr; align-items: stretch; }
+  .device-tools-grid { grid-template-columns: 1fr; }
+  .device-tool-action { min-height: 74px; border-right: 0; border-bottom: 1px solid var(--border); }
+  .device-tool-action:last-child { border-bottom: 0; }
   .wol-form { grid-template-columns: 1fr; }
   .port-scan-form { grid-template-columns: 1fr; }
   .port-list-field { grid-column: auto; }

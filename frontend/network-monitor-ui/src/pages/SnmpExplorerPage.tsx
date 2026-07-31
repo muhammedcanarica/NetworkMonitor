@@ -9,6 +9,7 @@ import {
   X,
 } from 'lucide-react'
 import { devicesApi } from '../api/devices'
+import { useSearchParams } from 'react-router-dom'
 import { snmpApi } from '../api/snmp'
 import { StatePanel } from '../components/ui/StatePanel'
 import type {
@@ -65,11 +66,12 @@ function InfoItem({ label, value }: { label: string; value: string | null }) {
 }
 
 export function SnmpExplorerPage() {
+  const [searchParams] = useSearchParams()
   const [devices, setDevices] = useState<Device[]>([])
   const [deviceLoadError, setDeviceLoadError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<ExplorerTab>('overview')
   const [connection, setConnection] = useState<ConnectionForm>({
-    ipAddress: '',
+    ipAddress: searchParams.get('ip')?.trim() ?? '',
     community: '',
     timeoutMilliseconds: '2000',
   })
@@ -96,6 +98,13 @@ export function SnmpExplorerPage() {
       requestController.current?.abort()
     }
   }, [])
+
+  useEffect(() => {
+    const queryIpAddress = searchParams.get('ip')?.trim()
+    if (queryIpAddress) {
+      setConnection((current) => ({ ...current, ipAddress: queryIpAddress }))
+    }
+  }, [searchParams])
 
   const createRequest = (): SnmpConnectionRequest | null => {
     const timeout = Number(connection.timeoutMilliseconds)

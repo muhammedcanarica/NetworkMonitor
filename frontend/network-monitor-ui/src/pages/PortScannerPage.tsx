@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Cable, CheckCircle2, LoaderCircle, ShieldCheck, X, XCircle } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import { portScannerApi } from '../api/portScanner'
 import { StatePanel } from '../components/ui/StatePanel'
 import type { PortScanRequest, PortScanResponse, PortState } from '../types/api'
@@ -56,7 +57,8 @@ function parsePorts(value: string): number[] {
 }
 
 export function PortScannerPage() {
-  const [ipAddress, setIpAddress] = useState('')
+  const [searchParams] = useSearchParams()
+  const [ipAddress, setIpAddress] = useState(() => searchParams.get('ip')?.trim() ?? '')
   const [preset, setPreset] = useState<Preset>('common')
   const [portsInput, setPortsInput] = useState(COMMON_PORTS.join(','))
   const [timeoutMilliseconds, setTimeoutMilliseconds] = useState('1000')
@@ -68,6 +70,11 @@ export function PortScannerPage() {
   const scanController = useRef<AbortController | null>(null)
 
   useEffect(() => () => scanController.current?.abort(), [])
+
+  useEffect(() => {
+    const queryIpAddress = searchParams.get('ip')?.trim()
+    if (queryIpAddress) setIpAddress(queryIpAddress)
+  }, [searchParams])
 
   const visibleResults = useMemo(() => result?.results.filter((item) =>
     filter === 'All' || item.state === filter) ?? [], [filter, result])

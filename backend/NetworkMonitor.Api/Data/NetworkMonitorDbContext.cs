@@ -10,6 +10,8 @@ public sealed class NetworkMonitorDbContext(DbContextOptions<NetworkMonitorDbCon
 
     public DbSet<CheckResult> CheckResults => Set<CheckResult>();
 
+    public DbSet<ConfigBackup> ConfigBackups => Set<ConfigBackup>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         var device = modelBuilder.Entity<Device>();
@@ -64,5 +66,43 @@ public sealed class NetworkMonitorDbContext(DbContextOptions<NetworkMonitorDbCon
             .WithMany(deviceItem => deviceItem.CheckResults)
             .HasForeignKey(item => item.DeviceId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        var configBackup = modelBuilder.Entity<ConfigBackup>();
+
+        configBackup.Property(item => item.IpAddress)
+            .IsRequired()
+            .HasMaxLength(45);
+
+        configBackup.Property(item => item.Vendor)
+            .HasConversion<string>()
+            .HasMaxLength(32)
+            .IsRequired();
+
+        configBackup.Property(item => item.Configuration)
+            .IsRequired();
+
+        configBackup.Property(item => item.Hash)
+            .IsRequired()
+            .HasMaxLength(64);
+
+        configBackup.Property(item => item.CapturedAt)
+            .HasConversion(
+                value => value.ToUnixTimeMilliseconds(),
+                value => DateTimeOffset.FromUnixTimeMilliseconds(value))
+            .IsRequired();
+
+        configBackup.Property(item => item.CreatedAt)
+            .HasConversion(
+                value => value.ToUnixTimeMilliseconds(),
+                value => DateTimeOffset.FromUnixTimeMilliseconds(value))
+            .IsRequired();
+
+        configBackup.HasIndex(item => new { item.IpAddress, item.CreatedAt });
+        configBackup.HasIndex(item => new { item.DeviceId, item.CreatedAt });
+
+        configBackup.HasOne<Device>()
+            .WithMany()
+            .HasForeignKey(item => item.DeviceId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

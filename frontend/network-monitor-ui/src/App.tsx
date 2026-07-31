@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AppLayout } from './components/layout/AppLayout'
 import { DevicesPage } from './pages/DevicesPage'
 import { ConfigBackupPage } from './pages/ConfigBackupPage'
+import { ConfigBackupHistoryPage } from './pages/ConfigBackupHistoryPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { OverviewPage } from './pages/OverviewPage'
 import { IpScannerPage } from './pages/IpScannerPage'
@@ -28,6 +29,7 @@ function App() {
             <Route path="devices" element={<DevicesPage />} />
             <Route path="tools/ip-scanner" element={<IpScannerPage />} />
             <Route path="tools/config-backup" element={<ConfigBackupPage />} />
+            <Route path="tools/config-backup/history" element={<ConfigBackupHistoryPage />} />
             <Route path="tools/port-scanner" element={<PortScannerPage />} />
             <Route path="tools/wake-on-lan" element={<WakeOnLanPage />} />
             <Route path="tools/snmp" element={<SnmpExplorerPage />} />

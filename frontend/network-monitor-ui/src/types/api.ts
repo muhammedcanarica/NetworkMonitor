@@ -124,6 +124,54 @@ export interface ConfigBackupResponse {
   suggestedFileName: string
 }
 
+export interface SaveConfigBackupRequest {
+  deviceId: number | null
+  ipAddress: string
+  vendor: ConfigBackupVendor
+  configuration: string
+  capturedAt: string
+}
+
+export interface ConfigBackupListItem {
+  id: number
+  deviceId: number | null
+  ipAddress: string
+  vendor: ConfigBackupVendor
+  capturedAt: string
+  createdAt: string
+  hash: string
+  configurationLength: number
+}
+
+export interface ConfigBackupDetail extends ConfigBackupListItem {
+  configuration: string
+}
+
+export interface SaveConfigBackupResponse {
+  configurationChanged: boolean
+  backupId: number
+  existingBackupId: number | null
+  backup: ConfigBackupListItem
+}
+
+export type ConfigDiffLineType = 'Added' | 'Removed' | 'Unchanged'
+
+export interface ConfigDiffLine {
+  type: ConfigDiffLineType
+  fromLineNumber: number | null
+  toLineNumber: number | null
+  content: string
+}
+
+export interface ConfigBackupComparison {
+  fromBackup: ConfigBackupListItem
+  toBackup: ConfigBackupListItem
+  addedLines: number
+  removedLines: number
+  changed: boolean
+  diffLines: ConfigDiffLine[]
+}
+
 export interface SnmpConnectionRequest {
   ipAddress: string
   community: string

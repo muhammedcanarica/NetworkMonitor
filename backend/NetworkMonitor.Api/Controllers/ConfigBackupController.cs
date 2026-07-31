@@ -6,7 +6,9 @@ namespace NetworkMonitor.Api.Controllers;
 
 [ApiController]
 [Route("api/tools/config-backup")]
-public sealed class ConfigBackupController(IConfigBackupService configBackupService) : ControllerBase
+public sealed class ConfigBackupController(
+    IConfigBackupService configBackupService,
+    IConfigBackupStorageService configBackupStorageService) : ControllerBase
 {
     [HttpPost]
     [ProducesResponseType<ConfigBackupResponse>(StatusCodes.Status200OK)]
@@ -45,6 +47,87 @@ public sealed class ConfigBackupController(IConfigBackupService configBackupServ
                 _ => "Configuration backup failed"
             };
             return StatusCode(status, CreateProblem(status, title, exception.Message));
+        }
+    }
+
+    [HttpPost("/api/config-backups")]
+    [ProducesResponseType<SaveConfigBackupResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status413PayloadTooLarge)]
+    public Task<ActionResult<SaveConfigBackupResponse>> Save(
+        SaveConfigBackupRequest request,
+        CancellationToken cancellationToken)
+    {
+        return ExecuteStorage(() => configBackupStorageService.SaveAsync(request, cancellationToken));
+    }
+
+    [HttpGet("/api/config-backups")]
+    [ProducesResponseType<IReadOnlyList<ConfigBackupListItemResponse>>(StatusCodes.Status200OK)]
+    public Task<ActionResult<IReadOnlyList<ConfigBackupListItemResponse>>> List(
+        [FromQuery] int? deviceId,
+        CancellationToken cancellationToken)
+    {
+        return ExecuteStorage(() => configBackupStorageService.ListAsync(deviceId, cancellationToken));
+    }
+
+    [HttpGet("/api/config-backups/{id:int}")]
+    [ProducesResponseType<ConfigBackupDetailResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public Task<ActionResult<ConfigBackupDetailResponse>> GetById(int id, CancellationToken cancellationToken)
+    {
+        return ExecuteStorage(() => configBackupStorageService.GetByIdAsync(id, cancellationToken));
+    }
+
+    [HttpGet("/api/config-backups/device/{deviceId:int}")]
+    [ProducesResponseType<IReadOnlyList<ConfigBackupListItemResponse>>(StatusCodes.Status200OK)]
+    public Task<ActionResult<IReadOnlyList<ConfigBackupListItemResponse>>> GetByDevice(
+        int deviceId,
+        CancellationToken cancellationToken)
+    {
+        return ExecuteStorage(() => configBackupStorageService.ListAsync(deviceId, cancellationToken));
+    }
+
+    [HttpGet("/api/config-backups/compare")]
+    [ProducesResponseType<ConfigBackupComparisonResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status413PayloadTooLarge)]
+    public Task<ActionResult<ConfigBackupComparisonResponse>> Compare(
+        [FromQuery] int fromId,
+        [FromQuery] int toId,
+        CancellationToken cancellationToken)
+    {
+        return ExecuteStorage(() => configBackupStorageService.CompareAsync(fromId, toId, cancellationToken));
+    }
+
+    private async Task<ActionResult<T>> ExecuteStorage<T>(Func<Task<T>> operation)
+    {
+        try
+        {
+            return Ok(await operation());
+        }
+        catch (ConfigBackupStorageValidationException exception)
+        {
+            return BadRequest(CreateProblem(
+                StatusCodes.Status400BadRequest,
+                "Invalid configuration backup request",
+                exception.Message));
+        }
+        catch (ConfigBackupSizeLimitException exception)
+        {
+            return StatusCode(
+                StatusCodes.Status413PayloadTooLarge,
+                CreateProblem(
+                    StatusCodes.Status413PayloadTooLarge,
+                    "Configuration backup exceeds a safe limit",
+                    exception.Message));
+        }
+        catch (ConfigBackupNotFoundException exception)
+        {
+            return NotFound(CreateProblem(
+                StatusCodes.Status404NotFound,
+                "Configuration backup was not found",
+                exception.Message));
         }
     }
 

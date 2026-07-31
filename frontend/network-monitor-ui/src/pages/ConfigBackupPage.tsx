@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { DatabaseBackup, Download, FileText, LoaderCircle, ShieldCheck, X } from 'lucide-react'
-import { useSearchParams } from 'react-router-dom'
-import { configBackupApi } from '../api/configBackup'
+import { Link, useSearchParams } from 'react-router-dom'
+import { configBackupApi, configBackupsApi } from '../api/configBackup'
 import { StatePanel } from '../components/ui/StatePanel'
-import type { ConfigBackupRequest, ConfigBackupResponse } from '../types/api'
+import type {
+  ConfigBackupRequest,
+  ConfigBackupResponse,
+  SaveConfigBackupResponse,
+} from '../types/api'
 
 interface ConfigBackupForm {
   ipAddress: string
@@ -50,12 +54,20 @@ export function ConfigBackupPage() {
     password: '',
   }))
   const [result, setResult] = useState<ConfigBackupResponse | null>(null)
+  const [savedBackup, setSavedBackup] = useState<SaveConfigBackupResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const requestController = useRef<AbortController | null>(null)
+  const saveController = useRef<AbortController | null>(null)
+  const deviceIdValue = Number(searchParams.get('deviceId'))
+  const deviceId = Number.isInteger(deviceIdValue) && deviceIdValue > 0 ? deviceIdValue : null
 
-  useEffect(() => () => requestController.current?.abort(), [])
+  useEffect(() => () => {
+    requestController.current?.abort()
+    saveController.current?.abort()
+  }, [])
 
   useEffect(() => {
     const queryIpAddress = searchParams.get('ip')?.trim()
@@ -107,6 +119,7 @@ export function ConfigBackupPage() {
     requestController.current = controller
     setIsLoading(true)
     setResult(null)
+    setSavedBackup(null)
 
     try {
       setResult(await configBackupApi.getRunningConfiguration(request, controller.signal))
@@ -120,6 +133,36 @@ export function ConfigBackupPage() {
     }
   }
 
+  const saveBackup = async () => {
+    if (!result) return
+
+    const controller = new AbortController()
+    saveController.current = controller
+    setIsSaving(true)
+    setError(null)
+    setNotice(null)
+
+    try {
+      const saved = await configBackupsApi.save({
+        deviceId,
+        ipAddress: result.ipAddress,
+        vendor: result.vendor,
+        configuration: result.configuration,
+        capturedAt: result.capturedAt,
+      }, controller.signal)
+      setSavedBackup(saved)
+      setNotice(saved.configurationChanged
+        ? `Backup #${saved.backupId} saved.`
+        : `No configuration changes detected. Existing backup #${saved.existingBackupId} is already stored.`)
+    } catch (saveError) {
+      if (isAbortError(saveError)) setNotice('Backup save cancelled.')
+      else setError(getErrorMessage(saveError))
+    } finally {
+      if (saveController.current === controller) saveController.current = null
+      setIsSaving(false)
+    }
+  }
+
   return (
     <div className="page">
       <header className="page-header">
@@ -128,6 +171,7 @@ export function ConfigBackupPage() {
           <h1>Config Backup</h1>
           <p>Retrieve a Cisco IOS / IOS-XE running configuration over SSH without changing the device.</p>
         </div>
+        <Link className="button secondary" to={deviceId ? `/tools/config-backup/history?deviceId=${deviceId}` : '/tools/config-backup/history'}>Backup History</Link>
       </header>
 
       {notice && <div className="success-alert" role="status">{notice}</div>}
@@ -165,7 +209,7 @@ export function ConfigBackupPage() {
             <input type="password" value={form.password} onChange={(event) => updateField('password', event.target.value)} disabled={isLoading} autoComplete="current-password" />
           </label>
           <div className="config-backup-submit">
-            <button className="button primary" type="submit" disabled={isLoading}>
+            <button className="button primary" type="submit" disabled={isLoading || isSaving}>
               {isLoading ? <LoaderCircle className="spin" size={16} /> : <DatabaseBackup size={16} />}
               {isLoading ? 'Retrieving…' : 'Get Configuration'}
             </button>
@@ -174,7 +218,7 @@ export function ConfigBackupPage() {
 
         <div className="config-backup-security-note">
           <ShieldCheck size={17} aria-hidden="true" />
-          <span><strong>Read-only scope:</strong> NetScope sends only the Cisco <code>show running-config</code> command. No configuration is written to the device, database, or server filesystem.</span>
+          <span><strong>Read-only scope:</strong> NetScope sends only the Cisco <code>show running-config</code> command. Configuration is not written to the device or server filesystem, and is stored only when you explicitly choose Save Backup.</span>
         </div>
       </section>
 
@@ -193,7 +237,13 @@ export function ConfigBackupPage() {
               <h2>Running configuration</h2>
               <p>{result.ipAddress} · Cisco IOS / IOS-XE · captured {new Date(result.capturedAt).toLocaleString()}</p>
             </div>
-            <button className="button secondary" type="button" onClick={() => downloadConfiguration(result)}><Download size={16} /> Download .txt</button>
+            <div className="config-result-actions">
+              <button className="button secondary" type="button" onClick={() => downloadConfiguration(result)}><Download size={16} /> Download .txt</button>
+              <button className="button primary" type="button" onClick={saveBackup} disabled={isSaving || savedBackup !== null}>
+                {isSaving ? <LoaderCircle className="spin" size={16} /> : <DatabaseBackup size={16} />}
+                {savedBackup ? 'Backup saved' : isSaving ? 'Saving…' : 'Save Backup'}
+              </button>
+            </div>
           </header>
           <div className="config-file-name"><FileText size={15} aria-hidden="true" /> {result.suggestedFileName}</div>
           <pre className="config-viewer"><code>{result.configuration}</code></pre>

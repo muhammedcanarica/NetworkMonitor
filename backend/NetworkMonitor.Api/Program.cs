@@ -48,6 +48,8 @@ builder.Services
     .Bind(builder.Configuration.GetSection(ConfigBackupOptions.SectionName))
     .Validate(options => options.ConnectionTimeoutMilliseconds > 0, "Configuration backup connection timeout must be greater than zero.")
     .Validate(options => options.CommandTimeoutMilliseconds > 0, "Configuration backup command timeout must be greater than zero.")
+    .Validate(options => options.MaxStoredConfigurationLength > 0, "Configuration backup storage limit must be greater than zero.")
+    .Validate(options => options.MaxDiffLines > 0, "Configuration backup diff line limit must be greater than zero.")
     .ValidateOnStart();
 builder.Services
     .AddControllers()
@@ -74,6 +76,8 @@ builder.Services.AddSingleton<ITcpPortProbe, TcpPortProbe>();
 builder.Services.AddSingleton<IPortScannerService, PortScannerService>();
 builder.Services.AddSingleton<ISshCommandTransport, SshCommandTransport>();
 builder.Services.AddSingleton<IConfigBackupService, ConfigBackupService>();
+builder.Services.AddSingleton<IConfigDiffService, ConfigDiffService>();
+builder.Services.AddScoped<IConfigBackupStorageService, ConfigBackupStorageService>();
 builder.Services.AddSingleton<IWakeOnLanPacketSender, UdpWakeOnLanPacketSender>();
 builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
 builder.Services.AddSingleton<ISnmpTransport, SharpSnmpTransport>();

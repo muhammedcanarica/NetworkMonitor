@@ -277,6 +277,27 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
 .config-file-name { display: flex; align-items: center; gap: 8px; padding: 12px 20px; color: #718399; border-bottom: 1px solid var(--border); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; }
 .config-file-name svg { color: var(--cyan); }
 .config-viewer { max-height: 620px; margin: 0; padding: 21px; overflow: auto; color: #b8c7d8; background: #08111c; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; line-height: 1.55; white-space: pre; }
+.config-result-actions,
+.device-tools-header-action { display: flex; align-items: center; gap: 10px; }
+.config-history-table { min-width: 900px; }
+.config-compare-panel > .panel-header > svg { color: var(--cyan); }
+.config-compare-form { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr) auto; align-items: end; gap: 14px; padding: 21px; }
+.config-compare-form label { display: flex; flex-direction: column; gap: 7px; color: #9dacbf; font-size: 11px; font-weight: 650; }
+.config-compare-form select { width: 100%; height: 40px; padding: 0 11px; color: var(--text-strong); border: 1px solid #273950; outline: none; border-radius: 8px; background: #09131f; color-scheme: dark; font-size: 12px; }
+.config-compare-form select:focus { border-color: rgba(48, 199, 215, 0.65); box-shadow: 0 0 0 3px rgba(48, 199, 215, 0.08); }
+.config-sensitive-note { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+.config-sensitive-note svg { flex: 0 0 auto; }
+.diff-summary { color: #718399; font-size: 11px; white-space: nowrap; }
+.diff-summary strong:first-child { color: var(--green); }
+.diff-summary strong:last-child { color: var(--red); }
+.config-diff-viewer { max-height: 640px; overflow: auto; background: #08111c; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; line-height: 1.55; }
+.config-diff-line { display: grid; grid-template-columns: 22px minmax(0, 1fr); min-width: max-content; padding: 1px 20px; color: #aebccd; white-space: pre; }
+.config-diff-line > span { color: #63758c; user-select: none; }
+.config-diff-line code { font: inherit; }
+.config-diff-line.added { color: #a5e7ca; background: rgba(64, 211, 156, 0.09); }
+.config-diff-line.added > span { color: var(--green); }
+.config-diff-line.removed { color: #f2b2b8; background: rgba(241, 111, 122, 0.09); }
+.config-diff-line.removed > span { color: var(--red); }
 
 .protocol-badge { padding: 5px 8px; color: var(--green); border: 1px solid rgba(64, 211, 156, 0.22); border-radius: 6px; background: rgba(64, 211, 156, 0.06); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 9px; font-weight: 750; letter-spacing: 0.06em; }
 .snmp-connection-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; padding: 21px; }
@@ -410,6 +431,8 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
   .port-scan-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .port-list-field { grid-column: span 2; }
   .config-backup-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .config-compare-form { grid-template-columns: 1fr 1fr; }
+  .config-compare-form .button { grid-column: 1 / -1; }
 }
 
 @media (max-width: 800px) {
@@ -437,6 +460,10 @@ h2 { margin-bottom: 5px; color: var(--text-strong); font-size: 15px; font-weight
   .port-scan-form { grid-template-columns: 1fr; }
   .port-list-field { grid-column: auto; }
   .config-backup-form { grid-template-columns: 1fr; }
+  .config-compare-form { grid-template-columns: 1fr; }
+  .config-compare-form .button { grid-column: auto; }
+  .config-result-actions,
+  .device-tools-header-action { width: 100%; justify-content: space-between; }
 }
 
 @media (max-width: 560px) {

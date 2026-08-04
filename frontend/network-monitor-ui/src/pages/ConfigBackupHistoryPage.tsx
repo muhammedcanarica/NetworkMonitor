@@ -79,11 +79,11 @@ export function ConfigBackupHistoryPage() {
 
   return (
     <div className="page">
-      <Link className="back-link" to="/tools/config-backup"><ArrowLeft size={16} /> Back to Config Backup</Link>
+      <Link className="back-link" to="/tools/config-backup"><ArrowLeft size={16} /> Back to Configuration Backup</Link>
       <header className="page-header">
         <div>
           <span className="eyebrow">Saved configuration snapshots</span>
-          <h1>Backup History</h1>
+          <h1>Configuration History</h1>
           <p>{historyLabel}. Configurations are loaded only when saved, compared, or opened in detail.</p>
         </div>
       </header>

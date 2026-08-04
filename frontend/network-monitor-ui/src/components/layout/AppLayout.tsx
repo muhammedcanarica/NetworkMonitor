@@ -72,7 +72,7 @@ export function AppLayout() {
           </NavLink>
           <NavLink to="/tools/config-backup">
             <DatabaseBackup size={18} aria-hidden="true" />
-            Config Backup
+            Configuration Backup
           </NavLink>
           <span className="nav-section-label tools-label">Settings</span>
           <NavLink to="/settings/credentials"><KeyRound size={18} aria-hidden="true" />Credentials</NavLink>

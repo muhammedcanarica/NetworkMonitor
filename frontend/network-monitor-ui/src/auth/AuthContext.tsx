@@ -10,4 +10,5 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<AuthValue>(() => ({ user, loading, login: async (username, password) => setUser(await authApi.login(username, password)), logout: async () => { await authApi.logout(); setUser(null) } }), [loading, user])
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
+// oxlint-disable-next-line react/only-export-components -- Keeping the hook beside its private context avoids exposing implementation details.
 export function useAuth() { const value = useContext(AuthContext); if (!value) throw new Error('AuthProvider is missing.'); return value }

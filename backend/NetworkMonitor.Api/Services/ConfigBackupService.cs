@@ -7,16 +7,16 @@ namespace NetworkMonitor.Api.Services;
 
 public sealed class ConfigBackupService(
     ISshCommandTransport sshCommandTransport,
+    ConfigBackupProviderResolver providerResolver,
     IOptions<ConfigBackupOptions> options) : IConfigBackupService
 {
-    private static readonly IReadOnlyList<string> CiscoIosCommands = ["show running-config"];
-
     private readonly ConfigBackupOptions _options = options.Value;
 
     public async Task<ConfigBackupResponse> GetRunningConfigurationAsync(
         ConfigBackupRequest request,
         CancellationToken cancellationToken)
     {
+        var provider = providerResolver.Resolve(request.Vendor);
         var connection = CreateConnection(request);
         var timeouts = new SshCommandTimeouts(
             _options.ConnectionTimeoutMilliseconds,
@@ -27,7 +27,7 @@ public sealed class ConfigBackupService(
         {
             configuration = await sshCommandTransport.ExecuteAsync(
                 connection,
-                CiscoIosCommands,
+                provider.GetRunningConfigurationCommands(),
                 timeouts,
                 cancellationToken);
         }
@@ -80,11 +80,6 @@ public sealed class ConfigBackupService(
         if (string.IsNullOrWhiteSpace(request.Password))
         {
             throw new ConfigBackupValidationException("Password is required.");
-        }
-
-        if (request.Vendor != ConfigBackupVendor.CiscoIos)
-        {
-            throw new ConfigBackupValidationException("Only Cisco IOS / IOS-XE devices are supported for configuration backup.");
         }
 
         return new SshCommandConnection(

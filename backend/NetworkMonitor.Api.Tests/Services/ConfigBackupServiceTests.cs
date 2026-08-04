@@ -35,7 +35,8 @@ public sealed class ConfigBackupServiceTests
     [InlineData("192.168.1.10", 0, "operator", "secret", ConfigBackupVendor.CiscoIos, "between 1 and 65535")]
     [InlineData("192.168.1.10", 22, "", "secret", ConfigBackupVendor.CiscoIos, "Username")]
     [InlineData("192.168.1.10", 22, "operator", "", ConfigBackupVendor.CiscoIos, "Password")]
-    [InlineData("192.168.1.10", 22, "operator", "secret", (ConfigBackupVendor)99, "Cisco")]
+    [InlineData("192.168.1.10", 22, "operator", "secret", ConfigBackupVendor.Fortinet, "not implemented")]
+    [InlineData("192.168.1.10", 22, "operator", "secret", (ConfigBackupVendor)99, "not supported")]
     public async Task GetRunningConfigurationAsync_RejectsInvalidRequests(
         string ipAddress,
         int port,
@@ -112,6 +113,7 @@ public sealed class ConfigBackupServiceTests
     {
         return new ConfigBackupService(
             transport,
+            new ConfigBackupProviderResolver([new CiscoIosConfigBackupProvider()]),
             Options.Create(new ConfigBackupOptions
             {
                 ConnectionTimeoutMilliseconds = 10000,

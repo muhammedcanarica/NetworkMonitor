@@ -61,7 +61,7 @@ function App() {
   )
 }
 
-function ProtectedLayout() {
+export function ProtectedLayout() {
   const { user, loading } = useAuth(); const location = useLocation()
   if (loading) return <div className="route-loading">Checking authentication…</div>
   if (!user) return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />

@@ -7,6 +7,7 @@ import { StatePanel } from '../components/ui/StatePanel'
 import type {
   ConfigBackupRequest,
   ConfigBackupResponse,
+  ConfigBackupVendor,
   SaveConfigBackupResponse,
 } from '../types/api'
 
@@ -55,6 +56,7 @@ export function ConfigBackupPage() {
     password: '',
   }))
   const [credentialSource, setCredentialSource] = useState<CredentialSource>('manual')
+  const [vendor, setVendor] = useState<ConfigBackupVendor>('CiscoIos')
   const [credentialId, setCredentialId] = useState<number | null>(null)
   const [result, setResult] = useState<ConfigBackupResponse | null>(null)
   const [savedBackup, setSavedBackup] = useState<SaveConfigBackupResponse | null>(null)
@@ -85,6 +87,11 @@ export function ConfigBackupPage() {
     const ipAddress = form.ipAddress.trim()
     const port = Number(form.port)
 
+    if (vendor === 'Fortinet') {
+      setError('Fortinet provider not implemented yet. Follow the documented test plan before adding production commands.')
+      return null
+    }
+
     if (!isValidIpv4Address(ipAddress)) {
       setError('Enter a valid target IPv4 address.')
       return null
@@ -112,7 +119,7 @@ export function ConfigBackupPage() {
       username: credentialSource === 'manual' ? form.username.trim() : null,
       password: credentialSource === 'manual' ? form.password : null,
       credentialId: credentialSource === 'saved' ? credentialId : null,
-      vendor: 'CiscoIos',
+      vendor,
     }
   }
 
@@ -176,10 +183,10 @@ export function ConfigBackupPage() {
       <header className="page-header">
         <div>
           <span className="eyebrow">Read-only device backup</span>
-          <h1>Config Backup</h1>
-          <p>Retrieve a Cisco IOS / IOS-XE running configuration over SSH without changing the device.</p>
+          <h1>Configuration Backup</h1>
+          <p>Retrieve a running configuration through a vendor-specific, read-only provider.</p>
         </div>
-        <Link className="button secondary" to={deviceId ? `/tools/config-backup/history?deviceId=${deviceId}` : '/tools/config-backup/history'}>Backup History</Link>
+        <Link className="button secondary" to={deviceId ? `/tools/config-backup/history?deviceId=${deviceId}` : '/tools/config-backup/history'}>Configuration History</Link>
       </header>
 
       {notice && <div className="success-alert" role="status">{notice}</div>}
@@ -205,8 +212,9 @@ export function ConfigBackupPage() {
           </label>
           <label>
             Vendor
-            <select value="CiscoIos" disabled={isLoading}>
+            <select value={vendor} onChange={(event) => setVendor(event.target.value as ConfigBackupVendor)} disabled={isLoading}>
               <option value="CiscoIos">Cisco IOS / IOS-XE</option>
+              <option value="Fortinet">Fortinet (not implemented)</option>
             </select>
           </label>
           {credentialSource === 'manual' && <label>
@@ -227,7 +235,7 @@ export function ConfigBackupPage() {
 
         <div className="config-backup-security-note">
           <ShieldCheck size={17} aria-hidden="true" />
-          <span><strong>Read-only scope:</strong> NetScope sends only the Cisco <code>show running-config</code> command. Saved secrets are resolved only by the server and never returned. Configuration is stored only when you explicitly choose Save Backup.</span>
+          <span><strong>Read-only scope:</strong> The active provider defines the read-only command. The current Cisco provider sends only <code>show running-config</code>. Saved secrets are resolved only by the server and never returned. Configuration is stored only when you explicitly choose Save Backup.</span>
         </div>
       </section>
 

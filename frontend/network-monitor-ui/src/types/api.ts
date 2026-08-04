@@ -106,7 +106,7 @@ export interface PortScanResponse {
   results: PortScanResult[]
 }
 
-export type ConfigBackupVendor = 'CiscoIos'
+export type ConfigBackupVendor = 'CiscoIos' | 'Fortinet'
 
 export interface ConfigBackupRequest {
   ipAddress: string

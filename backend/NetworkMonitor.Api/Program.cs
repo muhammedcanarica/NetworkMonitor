@@ -129,6 +129,8 @@ builder.Services.AddScoped<IIpScannerService, IpScannerService>();
 builder.Services.AddSingleton<ITcpPortProbe, TcpPortProbe>();
 builder.Services.AddSingleton<IPortScannerService, PortScannerService>();
 builder.Services.AddSingleton<ISshCommandTransport, SshCommandTransport>();
+builder.Services.AddSingleton<IConfigBackupProvider, CiscoIosConfigBackupProvider>();
+builder.Services.AddSingleton<ConfigBackupProviderResolver>();
 builder.Services.AddSingleton<IConfigBackupService, ConfigBackupService>();
 builder.Services.AddSingleton<IConfigDiffService, ConfigDiffService>();
 builder.Services.AddScoped<IConfigBackupStorageService, ConfigBackupStorageService>();

@@ -195,7 +195,7 @@ export function DeviceDetailPage() {
             <h2>Quick actions</h2>
             <p>Open a network tool with this device selected. No scan or query starts automatically.</p>
           </div>
-          <span className="device-tools-header-action"><Link className="button secondary compact-button" to={`/tools/config-backup/history?deviceId=${device.id}`}>Backup History</Link><Network size={19} aria-hidden="true" /></span>
+          <span className="device-tools-header-action"><Link className="button secondary compact-button" to={`/tools/config-backup/history?deviceId=${device.id}`}>Configuration History</Link><Network size={19} aria-hidden="true" /></span>
         </header>
         <div className="device-tools-grid">
           <Link
@@ -225,7 +225,7 @@ export function DeviceDetailPage() {
             to={`/tools/config-backup?${createSearchParams({ ip: device.ipAddress, deviceId: String(device.id) })}`}
           >
             <span className="device-tool-icon"><DatabaseBackup size={18} aria-hidden="true" /></span>
-            <span><strong>Config Backup</strong><small>Retrieve running configuration</small></span>
+            <span><strong>Configuration Backup</strong><small>Retrieve running configuration</small></span>
           </Link>
         </div>
       </section>

@@ -2,7 +2,8 @@ namespace NetworkMonitor.Api.Dtos;
 
 public enum ConfigBackupVendor
 {
-    CiscoIos
+    CiscoIos,
+    Fortinet
 }
 
 public sealed class ConfigBackupRequest

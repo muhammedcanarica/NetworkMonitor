@@ -38,9 +38,27 @@ describe('DeviceBandwidthPanel', () => {
     vi.mocked(snmpMonitoringApi.history).mockResolvedValue({ interfaceIndex: 1, interfaceName: 'uplink0', hours: 1, samples: [] })
   })
 
-  it('shows setup when monitoring has not been configured', async () => {
-    vi.mocked(snmpMonitoringApi.get).mockResolvedValue(null)
+  it('shows setup and saved credentials when the profile response is undefined', async () => {
+    vi.mocked(snmpMonitoringApi.get).mockResolvedValue(undefined as unknown as SnmpMonitoringProfile | null)
+    vi.mocked(credentialsApi.list).mockResolvedValue([{
+      id: 9, name: 'Lab SNMP', type: 'SnmpV2Community', username: null, deviceId: 1,
+      createdAt: '2026-08-04T08:00:00Z', updatedAt: '2026-08-04T08:00:00Z', hasSecret: true,
+    }])
     render(<DeviceBandwidthPanel deviceId={1} />)
+    expect(await screen.findByText('Saved SNMP credential')).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Lab SNMP' })).toBeInTheDocument()
+    expect(screen.queryByText('MONITORING ACTIVE')).not.toBeInTheDocument()
+  })
+
+  it('keeps the loading state until the profile request completes', async () => {
+    let resolveProfile: (value: SnmpMonitoringProfile | null) => void = () => undefined
+    vi.mocked(snmpMonitoringApi.get).mockReturnValue(new Promise((resolve) => { resolveProfile = resolve }))
+
+    render(<DeviceBandwidthPanel deviceId={1} />)
+    expect(screen.getByText('Loading bandwidth monitoring')).toBeInTheDocument()
+    expect(screen.queryByText('Saved SNMP credential')).not.toBeInTheDocument()
+
+    resolveProfile(null)
     expect(await screen.findByText('Saved SNMP credential')).toBeInTheDocument()
   })
 

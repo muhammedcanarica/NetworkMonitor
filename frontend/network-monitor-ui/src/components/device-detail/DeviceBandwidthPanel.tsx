@@ -53,7 +53,7 @@ export function DeviceBandwidthPanel({ deviceId }: { deviceId: number }) {
     request.current = controller
     Promise.all([snmpMonitoringApi.get(deviceId, controller.signal), snmpMonitoringApi.summary(deviceId, controller.signal), credentialsApi.list(controller.signal)])
       .then(([nextProfile, nextSummary, items]) => {
-        setProfile(nextProfile)
+        setProfile(nextProfile ?? null)
         setSummary(nextSummary)
         setCredentials(items.filter((item) => item.type === 'SnmpV2Community'))
         setSelectedInterface(nextSummary[0]?.interfaceIndex ?? null)
@@ -141,7 +141,7 @@ export function DeviceBandwidthPanel({ deviceId }: { deviceId: number }) {
     outboundMbps: sample.outboundBitsPerSecond === null ? null : sample.outboundBitsPerSecond / 1_000_000,
   })), [history])
 
-  const setupVisible = showSetup || profile === null
+  const setupVisible = showSetup || profile == null
   return <section className="panel bandwidth-panel">
     <header className="panel-header"><div><h2>Interface Traffic</h2><p>Background SNMP v2c traffic samples from selected 64-bit interface counters.</p></div><Activity size={19} /></header>
     {error && <div className="device-intelligence-error">{error}</div>}
